@@ -1,7 +1,7 @@
 /* Service worker — Cronograma TJPE PWA
    Estratégia: network-first para navegação (garante a versão mais recente online,
    com fallback offline para o index em cache); cache-first para os demais assets. */
-const CACHE = 'crono-tjpe-v4';
+const CACHE = 'crono-tjpe-v5';
 const ASSETS = [
   './',
   './index.html',
