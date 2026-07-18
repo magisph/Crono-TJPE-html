@@ -11,12 +11,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="application-name" content="Crono TJPE">
-<meta name="apple-mobile-web-app-title" content="Crono TJPE">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   /* ---------- THEME TOKENS (light default; dark via media / manual) ---------- */
   :root{
@@ -51,7 +47,7 @@
   html{-webkit-text-size-adjust:100%}
   body{
     margin:0; background:var(--bg); color:var(--txt);
-    font-family:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-family:"Roboto","Roboto Flex",system-ui,sans-serif;
     line-height:1.5; -webkit-font-smoothing:antialiased;
     -webkit-tap-highlight-color:transparent;
     padding-bottom:calc(56px + env(safe-area-inset-bottom));
@@ -532,7 +528,7 @@ renderChart();
 let deferredPrompt = null;
 const installBtn = document.getElementById('installBtn');
 function isStandalone(){
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  return window.matchMedia('(display-mode: standalone)').matches;
 }
 window.addEventListener('beforeinstallprompt', (e)=>{
   e.preventDefault(); deferredPrompt = e;
