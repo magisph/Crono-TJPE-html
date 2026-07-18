@@ -1,0 +1,6 @@
+interface:
+  display_name: "Crono TJPE Html"
+  short_description: "Repo-specific patterns and workflows for Crono-TJPE-html"
+  default_prompt: "Use the Crono-TJPE-html repo skill to follow existing architecture, testing, and workflow conventions."
+policy:
+  allow_implicit_invocation: true
