@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cronograma de Estudos — TJPE</title>
+<style>
+  :root{
+    --bg:#0f172a; --bg2:#111c34; --card:#182640; --card2:#1e2f4d;
+    --line:#2a3d61; --txt:#e8eef8; --mut:#9fb0cc; --mut2:#7286a8;
+    --accent:#38bdf8; --accent2:#22d3ee; --ok:#34d399; --okdim:#14512f;
+    --shadow:0 6px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    background:linear-gradient(180deg,#0b1220,#0f172a 240px);
+    color:var(--txt); line-height:1.45; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 18px 72px}
+  header.top{margin-bottom:18px}
+  h1{font-size:clamp(20px,3.4vw,30px);margin:0 0 4px;letter-spacing:.2px}
+  .period{color:var(--mut);font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    box-shadow:var(--shadow)}
+  .summary{padding:18px;margin:16px 0}
+  .sumgrid{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:flex-end}
+  .stat{display:flex;flex-direction:column;gap:2px}
+  .stat .big{font-size:clamp(22px,4vw,34px);font-weight:700;line-height:1}
+  .stat .lbl{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px}
+  .stat .big .sub{font-size:15px;color:var(--mut);font-weight:500}
+  .spacer{flex:1 1 60px}
+  .btn{cursor:pointer;border:1px solid var(--line);background:var(--card2);
+    color:var(--txt);padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;
+    transition:background .15s,border-color .15s}
+  .btn:hover{background:#25406a;border-color:#39568c}
+  .bar{height:12px;border-radius:8px;background:#0d1830;border:1px solid var(--line);
+    overflow:hidden;margin-top:14px}
+  .bar > i{display:block;height:100%;width:0;border-radius:8px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transition:width .35s ease}
+  .chartcard{padding:18px 14px 10px;margin:16px 0}
+  .chartcard h2{font-size:15px;margin:2px 6px 8px;color:var(--mut);font-weight:600;
+    text-transform:uppercase;letter-spacing:.6px}
+  svg.chart{width:100%;height:auto;display:block}
+  .chart text{fill:var(--mut2);font-size:11px;font-family:inherit}
+  .chart .axis{stroke:var(--line);stroke-width:1}
+  .chart .grid{stroke:#1b2c49;stroke-width:1}
+  .chart .phaseln{stroke:#33507f;stroke-width:1;stroke-dasharray:3 4}
+  .chart .today{stroke:#fbbf24;stroke-width:1.5;stroke-dasharray:2 3}
+  .chart .area{fill:url(#grad)}
+  .chart .pline{fill:none;stroke:var(--accent2);stroke-width:2.5;
+    stroke-linejoin:round;stroke-linecap:round}
+  .chart .plabel{fill:var(--mut);font-size:11px}
+  .phase{margin:30px 0 6px}
+  .phase h2{font-size:18px;margin:0 0 2px;display:flex;align-items:center;gap:10px}
+  .phase .pmeta{color:var(--mut);font-size:13px;margin:0 0 12px}
+  .phase-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;
+    background:#0d2137;color:var(--accent);border:1px solid #22496e}
+  .day{padding:14px 16px;margin:12px 0;transition:border-color .2s,background .2s}
+  .day.done{border-color:var(--okdim);background:linear-gradient(180deg,#14261d,#152a20)}
+  .dayhead{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    margin-bottom:10px}
+  .daytitle{font-weight:650;font-size:15px}
+  .daytag{font-size:12px;color:var(--mut);white-space:nowrap}
+  .daytag.full{color:var(--ok);font-weight:700}
+  .sess{display:flex;gap:12px;padding:11px;border-radius:12px;background:var(--card2);
+    border:1px solid transparent;margin:8px 0}
+  .sess.done{background:#132a20;border-color:var(--okdim)}
+  .sess label.chk{flex:0 0 auto;display:flex;align-items:flex-start;cursor:pointer;
+    padding-top:2px}
+  .sess input[type=checkbox]{width:20px;height:20px;cursor:pointer;accent-color:var(--ok);
+    margin:0}
+  .sbody{flex:1 1 auto;min-width:0}
+  .srow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px}
+  .disc{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:8px;color:#0b1220}
+  .cargatag{font-size:12px;color:var(--mut);font-weight:600;
+    background:#0d1830;border:1px solid var(--line);padding:2px 8px;border-radius:7px}
+  .sess.done .disc{filter:saturate(.5) brightness(.9)}
+  ul.temas{margin:4px 0 0;padding-left:20px}
+  ul.temas li{font-size:13.5px;color:#cdd9ec;margin:1px 0}
+  .sess.done ul.temas li{color:var(--mut);text-decoration:line-through;
+    text-decoration-color:#2f6a4a}
+  footer.foot{margin-top:40px;color:var(--mut2);font-size:12px;text-align:center}
+  @media (max-width:560px){
+    .wrap{padding:16px 12px 60px}
+    .sumgrid{gap:14px 20px}
+    .spacer{flex-basis:100%;height:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Cronograma de Estudos — TJPE</h1>
+    <div class="period" id="period"></div>
+  </header>
+
+  <section class="card summary">
+    <div class="sumgrid">
+      <div class="stat">
+        <div class="big"><span id="doneCount">0</span><span class="sub">/<span id="totalCount">0</span> sessões</span></div>
+        <div class="lbl">Sessões concluídas</div>
+      </div>
+      <div class="stat">
+        <div class="big"><span id="pct">0</span><span class="sub">%</span></div>
+        <div class="lbl">Progresso</div>
+      </div>
+      <div class="stat">
+        <div class="big"><span id="doneHours">0</span><span class="sub">/<span id="totalHours">0</span> h</span></div>
+        <div class="lbl">Carga horária</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn" id="resetBtn" type="button">Limpar progresso</button>
+    </div>
+    <div class="bar"><i id="barFill"></i></div>
+  </section>
+
+  <section class="card chartcard">
+    <h2>Progressão — sessões concluídas ao longo dos dias</h2>
+    <div id="chart"></div>
+  </section>
+
+  <main id="phases"></main>
+
+  <footer class="foot">
+    Seu progresso é salvo automaticamente neste navegador. &nbsp;·&nbsp; 146 sessões · 240 h · 73 dias
+  </footer>
+</div>
+
+<script id="plano" type="application/json">{"startDate":"2026-07-16","days":[{"date":"2026-07-16","dayLabel":"Dia 1 — 16/07/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Regime jurídico-administrativo","segurança jurídica/confiança legítima (LINDB, arts. 20-30)","Princípios","Organização administrativa","autarquias, fundações, EP/SEM"]},{"disciplina":"Ambiental","minutes":60,"temas":["Princípios","Antropocentrismo alargado x ecocentrismo (vaquejada, rinha de galo)"]}]},{"date":"2026-07-17","dayLabel":"Dia 2 — 17/07/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Fato do produto/serviço (arts. 12-14)","Vício do produto/serviço (arts. 18-25)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Espécies tributárias e competência"]}]},{"date":"2026-07-18","dayLabel":"Dia 3 — 18/07/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Responsabilidade civil","cumulação (Súm. 387 STJ)","Responsabilidade objetiva e risco da atividade (art. 927, §ún.)","fato de terceiro (arts. 932-933) e do incapaz (art. 928)","Fraudes digitais, provedores/plataformas (Marco Civil, arts. 19-21) e LGPD"]},{"disciplina":"Empresarial","minutes":90,"temas":["Recuperação judicial I"]}]},{"date":"2026-07-19","dayLabel":"Dia 4 — 19/07/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Agravo de instrumento","Apelação"]},{"disciplina":"ECA","minutes":90,"temas":["Prescrição na apuração (Súm. 338) e remissão (exclusão/suspensão/extinção)","Procedimento de apuração"]}]},{"date":"2026-07-20","dayLabel":"Dia 5 — 20/07/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Teoria da constituição","Hermenêutica"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Condições de elegibilidade (art. 14, §3º"]}]},{"date":"2026-07-21","dayLabel":"Dia 6 — 21/07/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Inquérito e arquivamento (art. 28","investigação defensiva","indiciamento","ANPP (art. 28-A)"]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["Hierarquia dos tratados","bloco de constitucionalidade"]}]},{"date":"2026-07-22","dayLabel":"Dia 7 — 22/07/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Nexo causal e concausas (art. 13, §1º","imputação objetiva","Erro de tipo x erro de proibição","descriminantes putativas (art. 20, §1º)"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Müller (texto x norma), Häberle (sociedade aberta), Viehweg (tópica)","neoconstitucionalismo e virada kantiana"]}]},{"date":"2026-07-23","dayLabel":"Dia 8 — 23/07/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Terceiro setor (Lei 13.019/2014)","Concurso público","Provimento e vacância","acumulação de cargos"]},{"disciplina":"Empresarial","minutes":60,"temas":["Recuperação judicial II","créditos sujeitos e não sujeitos (trava bancária)"]}]},{"date":"2026-07-24","dayLabel":"Dia 9 — 24/07/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Prescrição quinquenal (art. 27) x decadência","teoria do desvio produtivo do consumidor","Fortuito interno e fraude bancária (Súm. 479)","aplicação do CDC às instituições financeiras (Súm. 297)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Limitações ao poder de tributar"]}]},{"date":"2026-07-25","dayLabel":"Dia 10 — 25/07/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Responsabilidade de notários e registradores (regresso) e de profissionais liber","Juros e correção (Súm. 54 e 362)","transmissibilidade do dano moral aos herdeiros (Súm. 642)","Função social e boa-fé objetiva","deveres anexos","figuras parcelares (venire, supressio, surrectio, tu quoque)"]},{"disciplina":"ECA","minutes":90,"temas":["Adoção"]}]},{"date":"2026-07-26","dayLabel":"Dia 11 — 26/07/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Embargos de declaração","REsp e RExt","Teoria geral dos recursos"]},{"disciplina":"Empresarial","minutes":90,"temas":["Recuperação extrajudicial (art. 163) e recuperação especial de ME/EPP (arts. 70-"]}]},{"date":"2026-07-27","dayLabel":"Dia 12 — 27/07/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Ação penal e justa causa","representação no estelionato (Tema 1007)","trancamento","Competência","IDC (art. 109, §5º)"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Inelegibilidades (LC 64/90 + Ficha Limpa/LC 135)","Desincompatibilização e reeleição","serventuários (Súm. 5 TSE)"]}]},{"date":"2026-07-28","dayLabel":"Dia 13 — 28/07/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Ilicitude","Culpabilidade — teorias","embriaguez e actio libera in causa"]},{"disciplina":"ECA","minutes":60,"temas":["Entrega voluntária (art. 19-A)"]}]},{"date":"2026-07-29","dayLabel":"Dia 14 — 29/07/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Direitos fundamentais","Direitos em espécie (art. 5º)"]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["Controle de convencionalidade","pro homine, effet cliquet"]}]},{"date":"2026-07-30","dayLabel":"Dia 15 — 30/07/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Contratos","extinção (resolução, resilição, distrato)","Seguro","Súm. 402/620/632"]},{"disciplina":"Ambiental","minutes":60,"temas":["Competência legislativa (art. 24) e material","predominância do interesse (leis estaduais mais protetivas)","LC 140/2011"]}]},{"date":"2026-07-31","dayLabel":"Dia 16 — 31/07/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Remuneração","PAD e responsabilidade"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Teoria da justiça","Aristóteles (corretiva x distributiva)"]}]},{"date":"2026-08-01","dayLabel":"Dia 17 — 01/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Penal","minutes":150,"temas":["Concurso de pessoas (arts. 29-30)","Dosimetria — 1ª fase (art. 59","circunstâncias judiciais, vedação ao bis in idem)"]},{"disciplina":"Direitos Humanos","minutes":90,"temas":["SIDH","Casos contra o Brasil"]}]},{"date":"2026-08-02","dayLabel":"Dia 18 — 02/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Precedentes (\"Ouro da FGV\")","IRDR (arts. 976-987)","IAC (art. 947)","distinguishing e overruling","modulação (art. 927, §3º)"]},{"disciplina":"Formação Humanística","minutes":90,"temas":["Dignidade da pessoa humana e bioética","Ética e Estatuto da Magistratura"]}]},{"date":"2026-08-03","dayLabel":"Dia 19 — 03/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Cadeia de custódia (arts. 158-A a 158-F)","Reconhecimento de pessoas (art. 226)"]},{"disciplina":"ECA","minutes":60,"temas":["Guarda (compartilhada x unilateral) e destituição do poder familiar (rito)"]}]},{"date":"2026-08-04","dayLabel":"Dia 20 — 04/08/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Cláusulas abusivas (art. 51","vedação à arbitragem compulsória","Contratos bancários","Súm. 596 STF), consignado, revisão"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Imunidades"]}]},{"date":"2026-08-05","dayLabel":"Dia 21 — 05/08/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Remédios constitucionais","Direitos sociais","seguridade","Nacionalidade (art. 12) e direitos políticos (art. 14)","partidos"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Sistema proporcional"]}]},{"date":"2026-08-06","dayLabel":"Dia 22 — 06/08/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Ato administrativo","Extinção dos atos","Poder de polícia"]},{"disciplina":"Ambiental","minutes":60,"temas":["Responsabilidade civil ambiental","Responsabilidade administrativa (subjetiva"]}]},{"date":"2026-08-07","dayLabel":"Dia 23 — 07/08/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Tutela de urgência (antecipada e cautelar)","Estabilização da tutela antecipada (art. 304) e ação de revisão (2 anos)"]},{"disciplina":"Empresarial","minutes":60,"temas":["Falência"]}]},{"date":"2026-08-08","dayLabel":"Dia 24 — 08/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Doação","Compra e venda e pactos adjetos","Fiança e garantias","aval x fiança","Mandato","transação (art. 844)"]},{"disciplina":"Consumidor","minutes":90,"temas":["Planos de saúde","Súm. 608)"]}]},{"date":"2026-08-09","dayLabel":"Dia 25 — 09/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Tutela de evidência (art. 311) e tutela cautelar antecedente (art. 308)","Competência"]},{"disciplina":"ECA","minutes":90,"temas":["Acolhimento institucional/familiar","Conselho Tutelar (\"Alta Incidência FGV\")"]}]},{"date":"2026-08-10","dayLabel":"Dia 26 — 10/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Dosimetria","compensação confissão x reincidência","Súm. 231)","Súm. 443) e concurso de crimes (arts. 69-71)"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Uso de redes sociais pelo magistrado (Res. CNJ 305/2019)","imparcialidade","Direito digital"]}]},{"date":"2026-08-11","dayLabel":"Dia 27 — 11/08/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Prova digital","Busca e apreensão domiciliar","crime permanente"]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["Opiniões consultivas"]}]},{"date":"2026-08-12","dayLabel":"Dia 28 — 12/08/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Repartição de competências","Intervenção federal e estadual","ADI interventiva"]},{"disciplina":"ECA","minutes":60,"temas":["Competência da Infância x Vara de Família (art. 98","art. 148 — absoluta)"]}]},{"date":"2026-08-13","dayLabel":"Dia 29 — 13/08/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Litisconsórcio (necessário/unitário/facultativo/multitudinário) e intervenção de","IDPJ (arts. 133-137) e amicus curiae (art. 138)"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Federações partidárias (Lei 14.208/2021) e fidelidade partidária (justa causa)","Cota de gênero (art. 10, §3º) e fraude (candidaturas laranjas)","cota racial (FEFC)"]}]},{"date":"2026-08-14","dayLabel":"Dia 30 — 14/08/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Superendividamento (Lei 14.181/2021)","Conceito de consumidor (finalismo mitigado) e fornecedor","bystander (arts. 17 e 29)","serviços públicos (uti singuli x uti universi)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Responsabilidade tributária","Súm. 435), grupo econômico (art. 124), sucessão (art. 132)","Lançamento e crédito"]}]},{"date":"2026-08-15","dayLabel":"Dia 31 — 15/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Empreitada, prestação de serviços e locação (Lei 8.245","Pessoas naturais","comoriência (art. 8º)","ausência","Direitos da personalidade (arts. 11-21)"]},{"disciplina":"Empresarial","minutes":90,"temas":["Ação revocatória e ineficácia (arts. 130-138)","insolvência transnacional (COMI, arts. 167-A/Y)"]}]},{"date":"2026-08-16","dayLabel":"Dia 32 — 16/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":150,"temas":["Prova ilícita (art. 157) e nulidades (pas de nullité sans grief","nulidade de algibeira)","Prisão preventiva (arts. 312-313)","Audiência de custódia (art. 310","Res. CNJ 213)"]},{"disciplina":"Ambiental","minutes":90,"temas":["Licenciamento","competência","Código Florestal"]}]},{"date":"2026-08-17","dayLabel":"Dia 33 — 17/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Pessoa jurídica e desconsideração (art. 50","Lei da Liberdade Econômica)","Bens","bem de família (legal x convencional)"]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["População LGBTQIA+","Igualdade racial"]}]},{"date":"2026-08-18","dayLabel":"Dia 34 — 18/08/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Prescrição","Extinção da punibilidade"]},{"disciplina":"Empresarial","minutes":60,"temas":["Teoria geral da empresa"]}]},{"date":"2026-08-19","dayLabel":"Dia 35 — 19/08/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Administração Pública constitucional (art. 37)","Poder Legislativo","CPI (reserva de jurisdição)","TCU (Súm. 347)"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["IA no Judiciário (Res. CNJ 332/615) e LGPD no setor público","Antidiscriminação"]}]},{"date":"2026-08-20","dayLabel":"Dia 36 — 20/08/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Lei 14.133/2021","Contratação direta (\"Ouro da FGV\")","credenciamento","SRP e \"carona\"","Modalidades e critérios de julgamento","diálogo competitivo"]},{"disciplina":"ECA","minutes":60,"temas":["Autorização de viagem nacional e internacional (arts. 82-85","Res. CNJ 295/2019)"]}]},{"date":"2026-08-21","dayLabel":"Dia 37 — 21/08/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Petição inicial (art. 319), emenda (arts. 321/329), improcedência liminar","litigância predatória (art. 330)","Distribuição dinâmica do ônus da prova (art. 373, §1º)","provas em espécie e prova emprestada"]},{"disciplina":"Financeiro/Tributário","minutes":60,"temas":["Decadência e prescrição (art. 150, §4º x 173, I","Súm. 555)","prescrição intercorrente (Súm. 314/Tema 390)"]}]},{"date":"2026-08-22","dayLabel":"Dia 38 — 22/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Negócio jurídico e defeitos","simulação (art. 167)","Prescrição e decadência","Adimplemento substancial","mora","cláusula penal"]},{"disciplina":"Direitos Humanos","minutes":90,"temas":["Povos indígenas","Direitos das mulheres"]}]},{"date":"2026-08-23","dayLabel":"Dia 39 — 23/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Sentença e coisa julgada","fundamentação analítica (art. 489, §1º)","remessa necessária e dispensa (art. 496)","Normas fundamentais e NJP"]},{"disciplina":"Consumidor","minutes":90,"temas":["Diálogo das fontes (art. 7º","CC, arts. 113/187/422)"]}]},{"date":"2026-08-24","dayLabel":"Dia 40 — 24/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Tribunal do Júri","Emendatio libelli (art. 383) x mutatio libelli (art. 384)"]},{"disciplina":"Empresarial","minutes":60,"temas":["Sociedade limitada","SLU"]}]},{"date":"2026-08-25","dayLabel":"Dia 41 — 25/08/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Oferta e publicidade","Inversão do ônus da prova (art. 6º, VIII)","momento (instrução x julgamento)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["ICMS","Tema 1093), ICMS-ST/restituição (Tema 201)"]}]},{"date":"2026-08-26","dayLabel":"Dia 42 — 26/08/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Processo legislativo","Poder Judiciário","Reclamação constitucional e súmula vinculante (edição/cancelamento)"]},{"disciplina":"ECA","minutes":60,"temas":["Crimes e infrações administrativas"]}]},{"date":"2026-08-27","dayLabel":"Dia 43 — 27/08/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Contratos administrativos","Improbidade (Lei 8.429 + 14.230/21)","Improbidade","Tema 1199), sanções, legitimidade do MP, ANPC"]},{"disciplina":"Ambiental","minutes":60,"temas":["SNUC (Lei 9.985/2000)","PNMA (Lei 6.938/81)","inaplicabilidade do fato consumado (Súm. 613)"]}]},{"date":"2026-08-28","dayLabel":"Dia 44 — 28/08/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Homicídio e feminicídio autônomo (art. 121-A","privilegiado-qualificado","Lesão corporal e violência doméstica (Súm. 542)","Furto (privilégio — Súm. 511","qualificado","repouso noturno"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Ações eleitorais","Abuso de poder econômico/político e condutas vedadas (art. 73 Lei 9.504)"]}]},{"date":"2026-08-29","dayLabel":"Dia 45 — 29/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Posse","Propriedade e usucapião","função social","Direitos reais sobre coisa alheia","condomínio edilício e multipropriedade (art. 1.358-C)","vizinhança"]},{"disciplina":"Ambiental","minutes":90,"temas":["Crimes ambientais (Lei 9.605/98)"]}]},{"date":"2026-08-30","dayLabel":"Dia 46 — 30/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Cumprimento de sentença contra a Fazenda (arts. 534-535)","precatórios e RPV (art. 100 CF)","Exceção de pré-executividade (Súm. 393) e embargos à execução (garantia do juízo","Fraude à execução (Súm. 375) e medidas executivas atípicas (art. 139, IV"]},{"disciplina":"Direitos Humanos","minutes":90,"temas":["IDC (art. 109, §5º)","audiência de custódia como direito humano","TPI (Estatuto de Roma)"]}]},{"date":"2026-08-31","dayLabel":"Dia 47 — 31/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Recursos","Colaboração premiada (Lei 12.850, art. 4º)"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Protocolo para Julgamento com Perspectiva de Gênero (Res. CNJ 492/2023)","Sociologia"]}]},{"date":"2026-09-01","dayLabel":"Dia 48 — 01/09/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Estelionato (art. 171)","Crimes contra a dignidade sexual","Súm. 593/670)","importunação (art. 215-A)","Crimes contra a Administração Pública","insignificância inaplicável (Súm. 599)"]},{"disciplina":"ECA","minutes":60,"temas":["Direitos fundamentais e prioridade absoluta","primeira infância","Lei Henry Borel (14.344/2022)"]}]},{"date":"2026-09-02","dayLabel":"Dia 49 — 02/09/2026 (quarta-feira) — Fase 2","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Funções essenciais à Justiça","Controle difuso","Controle concentrado"]},{"disciplina":"Ambiental","minutes":60,"temas":["Novos temas (inovações)","logística reversa (12.305/2010)"]}]},{"date":"2026-09-03","dayLabel":"Dia 50 — 03/09/2026 (quinta-feira) — Fase 2","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Responsabilidade civil do Estado (art. 37, §6º)","Serviços públicos"]},{"disciplina":"Processo Penal","minutes":60,"temas":["Lei de Drogas processual","Lei Maria da Penha processual"]}]},{"date":"2026-09-04","dayLabel":"Dia 51 — 04/09/2026 (sexta-feira) — Fase 2","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Bancos de dados (art. 43)","cadastro positivo","Desconsideração (teoria menor — art. 28)","tutela coletiva (coisa julgada erga omnes, transporte in utilibus, Tema 1075)","energia elétrica (ANEEL 1.000/2021","Súm. 187 STF)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["ITCMD","ISS","Execução fiscal (Lei 6.830/80)","Tema 1184)"]}]},{"date":"2026-09-05","dayLabel":"Dia 52 — 05/09/2026 (sábado) — Fase 2","sessions":[{"disciplina":"Administrativo","minutes":150,"temas":["Intervenção na propriedade","indireta/tredestinação), servidão, requisição","Tombamento (DL 25/37","Controle","Lei Anticorrupção (12.846/2013)","LGPD na Administração"]},{"disciplina":"Civil","minutes":90,"temas":["Casamento","regime de bens (Súm. 377 STF)","pacto antenupcial"]}]},{"date":"2026-09-06","dayLabel":"Dia 53 — 06/09/2026 (domingo) — Fase 2","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Ações possessórias (fungibilidade, caráter dúplice) e monitória (Súm. 299/531/50","Embargos de terceiro (Súm. 303) e ação rescisória (hipóteses, prazo"]},{"disciplina":"Empresarial","minutes":90,"temas":["Sociedade anônima","Desconsideração da PJ"]}]},{"date":"2026-09-07","dayLabel":"Dia 54 — 07/09/2026 (segunda-feira) — Fase 2","sessions":[{"disciplina":"Civil","minutes":120,"temas":["União estável","guarda compartilhada (art. 1.584, §2º) e alienação parental","alimentos (gravídicos, avoengos","divórcio (legitimidade)"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Propaganda eleitoral","Prestação de contas e financiamento"]}]},{"date":"2026-09-08","dayLabel":"Dia 55 — 08/09/2026 (terça-feira) — Fase 2","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["JECrim (transação, sursis processual)","lavagem (autonomia)","interceptação (Lei 9.296)","CTB art. 301 (Lei 14.599/2023)","consolidação \"Ouro da FGV\""]},{"disciplina":"ECA","minutes":60,"temas":["Escuta especializada e depoimento especial (Lei 13.431/2017)","bullying/cyberbullying (Lei 14.811/2024"]}]},{"date":"2026-09-09","dayLabel":"Dia 56 — 09/09/2026 (quarta-feira) — Fase 2","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Modulação de efeitos (art. 27 da Lei 9.868","quórum) e efeito repristinatório","Controle estadual"]},{"disciplina":"Penal","minutes":60,"temas":["Lei de Drogas — usuário (art. 28","Tema 506/40g), tráfico privilegiado (§4º), associação"]}]},{"date":"2026-09-10","dayLabel":"Dia 57 — 10/09/2026 (quinta-feira) — Fase 2","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Mandado de segurança (Lei 12.016","honorários — Súm. 105/512","prazo)","Processo coletivo"]},{"disciplina":"Financeiro/Tributário","minutes":60,"temas":["Compensação e repetição de indébito (Súm. 213/460)","MS em matéria tributária","Orçamento — PPA/LDO/LOA","princípios","Emendas parlamentares e orçamento impositivo"]}]},{"date":"2026-09-11","dayLabel":"Dia 58 — 11/09/2026 (sexta-feira) — Fase 2","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Sucessão legítima","Sucessão testamentária","herança jacente/vacante","inventário e partilha"]},{"disciplina":"Empresarial","minutes":60,"temas":["Títulos de crédito","Espécies","protesto"]}]},{"date":"2026-09-12","dayLabel":"Dia 59 — 12/09/2026 (sábado) — Fase 2","sessions":[{"disciplina":"Civil","minutes":150,"temas":["LINDB","arts. 20-30 (consequencialismo, erro grosseiro)","súmulas civis do rol (Súm. 54/332/362/377/387/403/549/596/610/642) e \"Ouro\" de c"]},{"disciplina":"ECA","minutes":90,"temas":["Consolidação"]}]},{"date":"2026-09-13","dayLabel":"Dia 60 — 13/09/2026 (domingo) — Fase 2","sessions":[{"disciplina":"Constitucional","minutes":150,"temas":["Ordem econômica (art. 170) e social (art. 225)","inovações — EC 132/2023 e EC 134/2025","marco temporal indígena (Tema 1031)"]},{"disciplina":"Processo Civil","minutes":90,"temas":["Juizados Especiais da Fazenda Pública (Lei 12.153/09) e JEC (Lei 9.099)"]}]},{"date":"2026-09-14","dayLabel":"Dia 61 — 14/09/2026 (segunda-feira) — Fase 2","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Pegadinhas centrais aplicadas","consolidação de inovações do rol (Lei 14.133/2021","Tema 1199) ."]},{"disciplina":"Empresarial","minutes":60,"temas":["Propriedade industrial","evergreening/skinny labeling","marcas","Contratos empresariais"]}]},{"date":"2026-09-15","dayLabel":"Dia 62 — 15/09/2026 (terça-feira) — Fase 2","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Pegadinhas centrais aplicadas","consolidação \"Ouro da FGV\" de precedentes e litigância predatória ."]},{"disciplina":"Penal","minutes":60,"temas":["Lei Maria da Penha (Súm. 536/542/588/589)","IA na violência psicológica (art. 147-B"]}]},{"date":"2026-09-16","dayLabel":"Dia 63 — 16/09/2026 (quarta-feira) — Fase 2","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Pegadinhas civis centrais","inovações civis do rol (Lei 14.905/2024","Marco das Garantias — Lei 14.711/2023) ."]},{"disciplina":"Financeiro/Tributário","minutes":60,"temas":["Reforma Tributária","LRF (limites de pessoal, renúncia de receita, vedações de fim de mandato), dívid"]}]},{"date":"2026-09-17","dayLabel":"Dia 64 — 17/09/2026 (quinta-feira) — Fase 2","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Bateria mista final dos 26 microtemas","releitura de destaques dos pontos de maior erro ."]},{"disciplina":"Empresarial","minutes":60,"temas":["Cédulas de crédito (bancário","rural — DL 167/67)","direito concorrencial (CADE","Inovações"]}]},{"date":"2026-09-18","dayLabel":"Dia 65 — 18/09/2026 (sexta-feira) — Fase 2","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Bateria mista final dos 31 microtemas","releitura de destaques dos pontos de maior erro ."]},{"disciplina":"ECA","minutes":60,"temas":["Bateria mista final dos 13 microtemas"]}]},{"date":"2026-09-19","dayLabel":"Dia 66 — 19/09/2026 (sábado) — Fase 2","sessions":[{"disciplina":"Penal","minutes":150,"temas":["Estatuto do Desarmamento","Organização criminosa e colaboração premiada (Lei 12.850)","crimes ambientais (dupla imputação)","abuso de autoridade (dolo específico)","Execução penal","SV 9), remição (Tema 1278), RDD"]},{"disciplina":"Formação Humanística","minutes":90,"temas":["Pragmatismo e AED","heurísticas e vieses","MASCs (mediação/arbitragem","Res. 125/2010)","consolidação das resoluções CNJ do rol (Res. 213/305/332/345/372/385/492/615) po"]}]},{"date":"2026-09-20","dayLabel":"Dia 67 — 20/09/2026 (domingo) — Fase 3","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Análise de erros do simulado no eixo processual civil + revisão dirigida dos mic"]},{"disciplina":"Civil","minutes":90,"temas":["Análise de erros do simulado no eixo civil + revisão dirigida (responsabilidade,"]}]},{"date":"2026-09-21","dayLabel":"Dia 68 — 21/09/2026 (segunda-feira) — Fase 3","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Revisão final orientada pelos erros do Simulado nº 1","questões FGV cronometradas dos microtemas de maior erro ."]},{"disciplina":"Eleitoral","minutes":60,"temas":["Revisão final por erros","releitura de destaques ."]}]},{"date":"2026-09-22","dayLabel":"Dia 69 — 22/09/2026 (terça-feira) — Fase 3","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Revisão final orientada pelos erros","questões FGV cronometradas ."]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Releitura final de destaques"]}]},{"date":"2026-09-23","dayLabel":"Dia 70 — 23/09/2026 (quarta-feira) — Fase 3","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Revisão final orientada pelos erros","questões FGV cronometradas ."]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["Consolidação final","entrega x extradição","Comissão x Corte IDH) e releitura de destaques (tratados, convencionalidade, cas"]}]},{"date":"2026-09-24","dayLabel":"Dia 71 — 24/09/2026 (quinta-feira) — Fase 3","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Revisão final orientada pelos erros","questões FGV cronometradas ."]},{"disciplina":"Ambiental","minutes":60,"temas":["Releitura final de destaques"]}]},{"date":"2026-09-25","dayLabel":"Dia 72 — 25/09/2026 (sexta-feira) — Fase 3","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Revisão final orientada pelos erros","questões FGV cronometradas ."]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Releitura final de destaques"]}]},{"date":"2026-09-26","dayLabel":"Dia 73 — 26/09/2026 (sábado) — Fase 3 — Véspera da prova","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Revisão final leve","sem teoria nova ."]},{"disciplina":"Processo Civil","minutes":90,"temas":["Revisão final leve","sem teoria nova ."]}]}]}</script>
+<script>
+"use strict";
+const PLANO = JSON.parse(document.getElementById('plano').textContent);
+const STORE_KEY = 'crono-tjpe-v1';
+
+const DISC_COLORS = {
+  "Administrativo":"#60a5fa","Ambiental":"#34d399","Civil":"#f472b6",
+  "Constitucional":"#a78bfa","Consumidor":"#fbbf24","Direitos Humanos":"#fb7185",
+  "ECA":"#38bdf8","Eleitoral":"#c084fc","Empresarial":"#f59e0b",
+  "Financeiro/Tributário":"#2dd4bf","Formação Humanística":"#e879f9",
+  "Penal":"#f87171","Processo Civil":"#818cf8","Processo Penal":"#fca5a5"
+};
+function discColor(d){ return DISC_COLORS[d] || "#94a3b8"; }
+
+function fmtMin(m){
+  const h = Math.floor(m/60), r = m%60;
+  return h + "h" + String(r).padStart(2,'0');
+}
+function sessionKey(date, idx){ return date + "#" + idx; }
+
+function loadDone(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  }catch(e){ return new Set(); }
+}
+function saveDone(set){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify([...set])); }catch(e){}
+}
+let done = loadDone();
+
+// ---- totals ----
+const days = PLANO.days;
+let TOTAL_SESS = 0, TOTAL_MIN = 0;
+const phaseOrder = [];
+for(const day of days){
+  for(const s of day.sessions){ TOTAL_SESS++; TOTAL_MIN += s.minutes; }
+  const m = day.dayLabel.match(/Fase\s*([0-9]+)/);
+  day._phase = m ? m[1] : "—";
+  if(!phaseOrder.includes(day._phase)) phaseOrder.push(day._phase);
+}
+
+// ---- helpers over current progress ----
+function isDone(date, idx){ return done.has(sessionKey(date, idx)); }
+function dayDoneCount(day, di){
+  let c = 0; day.sessions.forEach((s,i)=>{ if(isDone(day.date,i)) c++; }); return c;
+}
+function totals(){
+  let ds=0, dm=0;
+  days.forEach(day=>day.sessions.forEach((s,i)=>{ if(isDone(day.date,i)){ ds++; dm+=s.minutes; }}));
+  return {ds, dm};
+}
+
+// ---- render summary ----
+function renderSummary(){
+  const {ds, dm} = totals();
+  document.getElementById('doneCount').textContent = ds;
+  document.getElementById('totalCount').textContent = TOTAL_SESS;
+  document.getElementById('pct').textContent = Math.round(ds/TOTAL_SESS*100);
+  document.getElementById('doneHours').textContent = (dm/60).toFixed(1).replace('.',',');
+  document.getElementById('totalHours').textContent = Math.round(TOTAL_MIN/60);
+  document.getElementById('barFill').style.width = (ds/TOTAL_SESS*100) + '%';
+}
+
+// ---- chart ----
+function computeCumulative(){
+  // cumulative completed sessions up to and including each day index
+  const arr = []; let run = 0;
+  days.forEach(day=>{ run += dayDoneCount(day); arr.push(run); });
+  return arr;
+}
+function todayIndex(){
+  const t = new Date(); t.setHours(0,0,0,0);
+  for(let i=0;i<days.length;i++){
+    const d = new Date(days[i].date + "T00:00:00");
+    if(d.getTime() === t.getTime()) return i;
+  }
+  return -1;
+}
+function renderChart(){
+  const W=920, H=320, padL=42, padR=14, padT=14, padB=34;
+  const n = days.length;
+  const cum = computeCumulative();
+  const maxY = TOTAL_SESS;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const x = i => padL + (n<=1?0:(i/(n-1))*plotW);
+  const y = v => padT + plotH - (v/maxY)*plotH;
+
+  // y gridlines every 25% of total
+  let grid = "", ylab = "";
+  const steps = 4;
+  for(let k=0;k<=steps;k++){
+    const val = maxY*k/steps, yy = y(val);
+    grid += `<line class="grid" x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}"/>`;
+    ylab += `<text x="${padL-6}" y="${(yy+3.5).toFixed(1)}" text-anchor="end">${Math.round(val)}</text>`;
+  }
+  // phase boundary vertical lines + labels
+  let phaseMarks = "";
+  for(let i=1;i<n;i++){
+    if(days[i]._phase !== days[i-1]._phase){
+      const xx = (x(i)+x(i-1))/2;
+      phaseMarks += `<line class="phaseln" x1="${xx.toFixed(1)}" y1="${padT}" x2="${xx.toFixed(1)}" y2="${padT+plotH}"/>`;
+    }
+  }
+  // phase labels centered per phase run
+  let plabels = "";
+  let start = 0;
+  for(let i=1;i<=n;i++){
+    if(i===n || days[i]._phase !== days[start]._phase){
+      const mid = (x(start)+x(i-1))/2;
+      plabels += `<text class="plabel" x="${mid.toFixed(1)}" y="${(padT+12)}" text-anchor="middle">Fase ${days[start]._phase}</text>`;
+      start = i;
+    }
+  }
+  // x labels: show ~every 10 days (day numbers) + last
+  let xlab = "";
+  for(let i=0;i<n;i+=10){
+    xlab += `<text x="${x(i).toFixed(1)}" y="${H-padB+18}" text-anchor="middle">${i+1}</text>`;
+  }
+  xlab += `<text x="${x(n-1).toFixed(1)}" y="${H-padB+18}" text-anchor="middle">${n}</text>`;
+
+  // line + area path
+  let line = "";
+  cum.forEach((v,i)=>{ line += (i===0?"M":"L") + x(i).toFixed(1) + " " + y(v).toFixed(1) + " "; });
+  const area = `M${x(0).toFixed(1)} ${y(0).toFixed(1)} ` +
+    cum.map((v,i)=>`L${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" ") +
+    ` L${x(n-1).toFixed(1)} ${y(0).toFixed(1)} Z`;
+
+  // today marker
+  const ti = todayIndex();
+  let today = "";
+  if(ti>=0){
+    today = `<line class="today" x1="${x(ti).toFixed(1)}" y1="${padT}" x2="${x(ti).toFixed(1)}" y2="${padT+plotH}"/>` +
+      `<text x="${x(ti).toFixed(1)}" y="${padT-2}" text-anchor="middle" fill="#fbbf24">hoje</text>`;
+  }
+  // last point dot
+  const lastV = cum[n-1];
+  const dot = `<circle cx="${x(n-1).toFixed(1)}" cy="${y(lastV).toFixed(1)}" r="4" fill="#22d3ee"/>`;
+
+  const svg = `
+  <svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"
+       aria-label="Gráfico de progressão: ${lastV} de ${maxY} sessões concluídas">
+    <defs>
+      <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="#22d3ee" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    ${grid}${phaseMarks}
+    <line class="axis" x1="${padL}" y1="${padT+plotH}" x2="${W-padR}" y2="${padT+plotH}"/>
+    <line class="axis" x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+plotH}"/>
+    ${ylab}${xlab}${plabels}
+    <path class="area" d="${area}"/>
+    <path class="pline" d="${line.trim()}"/>
+    ${today}${dot}
+    <text x="${(padL+ (W-padR-padL)/2).toFixed(1)}" y="${H-4}" text-anchor="middle">Dia do cronograma</text>
+  </svg>`;
+  document.getElementById('chart').innerHTML = svg;
+}
+
+// ---- render days grouped by phase ----
+function renderPhases(){
+  const root = document.getElementById('phases');
+  root.innerHTML = "";
+  for(const ph of phaseOrder){
+    const pdays = days.filter(d=>d._phase===ph);
+    let sess=0, mins=0;
+    pdays.forEach(d=>d.sessions.forEach(s=>{sess++;mins+=s.minutes;}));
+    const sec = document.createElement('section');
+    sec.className = 'phase';
+    sec.innerHTML =
+      `<h2><span class="phase-badge">Fase ${ph}</span></h2>` +
+      `<p class="pmeta">${pdays.length} dias · ${sess} sessões · ${(mins/60).toFixed(0)} h</p>`;
+    pdays.forEach(day=>{
+      // strip "— Fase N" from label for cleaner title
+      const title = day.dayLabel.replace(/\s*—\s*Fase\s*[0-9]+\s*$/,'');
+      const card = document.createElement('article');
+      card.className = 'card day';
+      card.dataset.date = day.date;
+      let sHtml = "";
+      day.sessions.forEach((s,i)=>{
+        const key = sessionKey(day.date,i);
+        const checked = isDone(day.date,i);
+        const col = discColor(s.disciplina);
+        const temas = s.temas.map(t=>`<li>${escapeHtml(t)}</li>`).join("");
+        sHtml +=
+          `<div class="sess${checked?' done':''}" data-key="${key}">
+            <label class="chk"><input type="checkbox" data-key="${key}" ${checked?'checked':''}></label>
+            <div class="sbody">
+              <div class="srow">
+                <span class="disc" style="background:${col}">${escapeHtml(s.disciplina)}</span>
+                <span class="cargatag">${fmtMin(s.minutes)}</span>
+              </div>
+              <ul class="temas">${temas}</ul>
+            </div>
+          </div>`;
+      });
+      card.innerHTML =
+        `<div class="dayhead">
+           <span class="daytitle">${escapeHtml(title)}</span>
+           <span class="daytag" data-daytag></span>
+         </div>${sHtml}`;
+      sec.appendChild(card);
+    });
+    root.appendChild(sec);
+  }
+  // wire checkboxes
+  root.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', onToggle);
+  });
+  refreshDayStates();
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function onToggle(e){
+  const key = e.target.dataset.key;
+  if(e.target.checked) done.add(key); else done.delete(key);
+  saveDone(done);
+  // update the session row visual
+  const sess = e.target.closest('.sess');
+  if(sess) sess.classList.toggle('done', e.target.checked);
+  refreshDayStates();
+  renderSummary();
+  renderChart();
+}
+
+function refreshDayStates(){
+  document.querySelectorAll('.day').forEach(card=>{
+    const date = card.dataset.date;
+    const day = days.find(d=>d.date===date);
+    const total = day.sessions.length;
+    let c = 0; day.sessions.forEach((s,i)=>{ if(isDone(date,i)) c++; });
+    const tag = card.querySelector('[data-daytag]');
+    const full = c===total && total>0;
+    card.classList.toggle('done', full);
+    tag.textContent = full ? '✓ concluído' : `${c}/${total} sessões`;
+    tag.classList.toggle('full', full);
+  });
+}
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(!confirm('Limpar todo o progresso registrado? Esta ação não pode ser desfeita.')) return;
+  done = new Set();
+  saveDone(done);
+  document.querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=false;});
+  document.querySelectorAll('.sess.done').forEach(s=>s.classList.remove('done'));
+  refreshDayStates();
+  renderSummary();
+  renderChart();
+});
+
+// ---- init ----
+const sd = days[0].date.split('-'), ed = days[days.length-1].date.split('-');
+document.getElementById('period').textContent =
+  `${sd[2]}/${sd[1]}/${sd[0]} → ${ed[2]}/${ed[1]}/${ed[0]}  ·  ${days.length} dias  ·  ${TOTAL_SESS} sessões  ·  ${Math.round(TOTAL_MIN/60)} h`;
+renderPhases();
+renderSummary();
+renderChart();
+</script>
+</body>
+</html>
