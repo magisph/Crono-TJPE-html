@@ -2,138 +2,260 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1729" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Gerenciador do cronograma de estudos para o concurso do TJPE.">
 <title>Cronograma de Estudos — TJPE</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="application-name" content="Crono TJPE">
+<meta name="apple-mobile-web-app-title" content="Crono TJPE">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
+  /* ---------- THEME TOKENS (light default; dark via media / manual) ---------- */
   :root{
-    --bg:#0f172a; --bg2:#111c34; --card:#182640; --card2:#1e2f4d;
-    --line:#2a3d61; --txt:#e8eef8; --mut:#9fb0cc; --mut2:#7286a8;
-    --accent:#38bdf8; --accent2:#22d3ee; --ok:#34d399; --okdim:#14512f;
-    --shadow:0 6px 24px rgba(0,0,0,.35);
+    color-scheme: light dark;
+    --bg:#f4f6fb; --surface:#ffffff; --surface2:#eef2f9; --surface3:#e7edf7;
+    --txt:#17233a; --mut:#4a5b78; --mut2:#63748f; --line:#d6deec;
+    --primary:#0e7490; --primary2:#0891b2; --onprimary:#ffffff;
+    --ok:#0f9d63; --okbg:#e2f6ec; --okline:#9fdcbc; --okstrike:#0f9d63;
+    --focus:#0891b2; --shadow:0 4px 16px rgba(30,50,90,.10);
+    --chip-ink:#0b1220;
   }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1729; --surface:#182640; --surface2:#1e2f4d; --surface3:#24375a;
+      --txt:#e8eef8; --mut:#9fb0cc; --mut2:#7f92b4; --line:#2a3d61;
+      --primary:#38bdf8; --primary2:#22d3ee; --onprimary:#08131f;
+      --ok:#34d399; --okbg:#13291f; --okline:#1f6f47; --okstrike:#2f6a4a;
+      --focus:#38bdf8; --shadow:0 6px 24px rgba(0,0,0,.35);
+      --chip-ink:#0b1220;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1729; --surface:#182640; --surface2:#1e2f4d; --surface3:#24375a;
+    --txt:#e8eef8; --mut:#9fb0cc; --mut2:#7f92b4; --line:#2a3d61;
+    --primary:#38bdf8; --primary2:#22d3ee; --onprimary:#08131f;
+    --ok:#34d399; --okbg:#13291f; --okline:#1f6f47; --okstrike:#2f6a4a;
+    --focus:#38bdf8; --shadow:0 6px 24px rgba(0,0,0,.35);
+    --chip-ink:#0b1220;
+  }
+
   *{box-sizing:border-box}
-  html,body{margin:0}
+  html{-webkit-text-size-adjust:100%}
   body{
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-    background:linear-gradient(180deg,#0b1220,#0f172a 240px);
-    color:var(--txt); line-height:1.45; -webkit-font-smoothing:antialiased;
+    margin:0; background:var(--bg); color:var(--txt);
+    font-family:"Roboto",system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:calc(56px + env(safe-area-inset-bottom));
   }
-  .wrap{max-width:1040px;margin:0 auto;padding:24px 18px 72px}
-  header.top{margin-bottom:18px}
-  h1{font-size:clamp(20px,3.4vw,30px);margin:0 0 4px;letter-spacing:.2px}
-  .period{color:var(--mut);font-size:14px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
-    box-shadow:var(--shadow)}
-  .summary{padding:18px;margin:16px 0}
-  .sumgrid{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:flex-end}
-  .stat{display:flex;flex-direction:column;gap:2px}
-  .stat .big{font-size:clamp(22px,4vw,34px);font-weight:700;line-height:1}
-  .stat .lbl{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px}
-  .stat .big .sub{font-size:15px;color:var(--mut);font-weight:500}
-  .spacer{flex:1 1 60px}
-  .btn{cursor:pointer;border:1px solid var(--line);background:var(--card2);
-    color:var(--txt);padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;
-    transition:background .15s,border-color .15s}
-  .btn:hover{background:#25406a;border-color:#39568c}
-  .bar{height:12px;border-radius:8px;background:#0d1830;border:1px solid var(--line);
-    overflow:hidden;margin-top:14px}
-  .bar > i{display:block;height:100%;width:0;border-radius:8px;
-    background:linear-gradient(90deg,var(--accent),var(--accent2));
-    transition:width .35s ease}
-  .chartcard{padding:18px 14px 10px;margin:16px 0}
-  .chartcard h2{font-size:15px;margin:2px 6px 8px;color:var(--mut);font-weight:600;
-    text-transform:uppercase;letter-spacing:.6px}
-  svg.chart{width:100%;height:auto;display:block}
-  .chart text{fill:var(--mut2);font-size:11px;font-family:inherit}
-  .chart .axis{stroke:var(--line);stroke-width:1}
-  .chart .grid{stroke:#1b2c49;stroke-width:1}
-  .chart .phaseln{stroke:#33507f;stroke-width:1;stroke-dasharray:3 4}
-  .chart .today{stroke:#fbbf24;stroke-width:1.5;stroke-dasharray:2 3}
-  .chart .area{fill:url(#grad)}
-  .chart .pline{fill:none;stroke:var(--accent2);stroke-width:2.5;
-    stroke-linejoin:round;stroke-linecap:round}
-  .chart .plabel{fill:var(--mut);font-size:11px}
-  .phase{margin:30px 0 6px}
-  .phase h2{font-size:18px;margin:0 0 2px;display:flex;align-items:center;gap:10px}
-  .phase .pmeta{color:var(--mut);font-size:13px;margin:0 0 12px}
-  .phase-badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;
-    background:#0d2137;color:var(--accent);border:1px solid #22496e}
-  .day{padding:14px 16px;margin:12px 0;transition:border-color .2s,background .2s}
-  .day.done{border-color:var(--okdim);background:linear-gradient(180deg,#14261d,#152a20)}
-  .dayhead{display:flex;align-items:center;justify-content:space-between;gap:10px;
-    margin-bottom:10px}
-  .daytitle{font-weight:650;font-size:15px}
-  .daytag{font-size:12px;color:var(--mut);white-space:nowrap}
-  .daytag.full{color:var(--ok);font-weight:700}
-  .sess{display:flex;gap:12px;padding:11px;border-radius:12px;background:var(--card2);
-    border:1px solid transparent;margin:8px 0}
-  .sess.done{background:#132a20;border-color:var(--okdim)}
-  .sess label.chk{flex:0 0 auto;display:flex;align-items:flex-start;cursor:pointer;
-    padding-top:2px}
-  .sess input[type=checkbox]{width:20px;height:20px;cursor:pointer;accent-color:var(--ok);
-    margin:0}
-  .sbody{flex:1 1 auto;min-width:0}
-  .srow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px}
-  .disc{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:8px;color:#0b1220}
-  .cargatag{font-size:12px;color:var(--mut);font-weight:600;
-    background:#0d1830;border:1px solid var(--line);padding:2px 8px;border-radius:7px}
-  .sess.done .disc{filter:saturate(.5) brightness(.9)}
-  ul.temas{margin:4px 0 0;padding-left:20px}
-  ul.temas li{font-size:13.5px;color:#cdd9ec;margin:1px 0}
-  .sess.done ul.temas li{color:var(--mut);text-decoration:line-through;
-    text-decoration-color:#2f6a4a}
-  footer.foot{margin-top:40px;color:var(--mut2);font-size:12px;text-align:center}
-  @media (max-width:560px){
-    .wrap{padding:16px 12px 60px}
-    .sumgrid{gap:14px 20px}
-    .spacer{flex-basis:100%;height:0}
+  a{color:var(--primary)}
+  :focus-visible{outline:3px solid var(--focus); outline-offset:2px; border-radius:6px}
+
+  /* ---------- APP BAR (sticky, Material top app bar) ---------- */
+  .appbar{
+    position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter:saturate(140%) blur(10px); -webkit-backdrop-filter:saturate(140%) blur(10px);
+    border-bottom:1px solid var(--line);
+    padding-top:env(safe-area-inset-top);
+  }
+  .appbar-inner{
+    max-width:1080px; margin:0 auto; display:flex; align-items:center; gap:10px;
+    padding:8px max(14px, env(safe-area-inset-left)) 8px max(14px, env(safe-area-inset-right));
+    min-height:56px;
+  }
+  .app-title{font-size:1.02rem; font-weight:700; letter-spacing:.2px; margin:0; flex:1 1 auto;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .app-actions{display:flex; gap:6px; flex:0 0 auto}
+  .iconbtn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    min-height:48px; min-width:48px; padding:0 14px; border-radius:24px;
+    background:transparent; color:var(--txt); border:1px solid var(--line);
+    font:inherit; font-size:.86rem; font-weight:600; cursor:pointer;
+    transition:background .15s, transform .05s;
+  }
+  .iconbtn:hover{background:var(--surface2)}
+  .iconbtn:active{transform:scale(.96)}
+  .iconbtn[disabled]{opacity:.45; cursor:not-allowed}
+  .iconbtn .emoji{font-size:1.05rem; line-height:1}
+  #installBtn{border-color:color-mix(in srgb, var(--primary) 55%, transparent);
+    color:var(--primary); background:color-mix(in srgb, var(--primary) 12%, transparent)}
+  @media (max-width:439px){ .btn-txt{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap} }
+  .appbar-progress{height:3px; background:var(--surface3)}
+  .appbar-progress>i{display:block; height:100%; width:0;
+    background:linear-gradient(90deg,var(--primary),var(--primary2)); transition:width .35s ease}
+
+  /* ---------- LAYOUT ---------- */
+  .wrap{max-width:1080px; margin:0 auto;
+    padding:16px max(14px, env(safe-area-inset-left)) 48px max(14px, env(safe-area-inset-right))}
+  .period{color:var(--mut); font-size:.86rem; margin:2px 2px 14px}
+
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow)}
+
+  /* ---------- SUMMARY ---------- */
+  .summary{padding:16px; margin-bottom:16px}
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:14px}
+  .stat{background:var(--surface2); border-radius:12px; padding:12px 12px 10px; text-align:center}
+  .stat .big{font-size:clamp(1.35rem,5vw,1.9rem); font-weight:800; line-height:1.05}
+  .stat .big .sub{font-size:.9rem; color:var(--mut); font-weight:600}
+  .stat .lbl{font-size:.68rem; color:var(--mut); text-transform:uppercase; letter-spacing:.7px; margin-top:4px}
+  .bar{height:12px; border-radius:8px; background:var(--surface3); overflow:hidden}
+  .bar>i{display:block; height:100%; width:0; border-radius:8px;
+    background:linear-gradient(90deg,var(--primary),var(--primary2)); transition:width .35s ease}
+  .resetrow{display:flex; justify-content:flex-end; margin-top:12px}
+  .btn-reset{min-height:48px; padding:0 18px; border-radius:24px; cursor:pointer;
+    background:transparent; color:var(--primary); border:1px solid var(--line);
+    font:inherit; font-weight:600; font-size:.86rem; transition:background .15s, transform .05s}
+  .btn-reset:hover{background:var(--surface2)}
+  .btn-reset:active{transform:scale(.97)}
+
+  /* ---------- CHART ---------- */
+  .chartcard{padding:14px 10px 8px; margin-bottom:20px}
+  .chartcard h2{font-size:.72rem; margin:2px 8px 6px; color:var(--mut); font-weight:700;
+    text-transform:uppercase; letter-spacing:.7px}
+  #chart svg{width:100%; height:auto; display:block}
+  #chart text{fill:var(--mut2); font-family:inherit}
+  #chart .axis{stroke:var(--line); stroke-width:1}
+  #chart .grid{stroke:color-mix(in srgb, var(--line) 60%, transparent); stroke-width:1}
+  #chart .phaseln{stroke:color-mix(in srgb, var(--primary) 45%, transparent); stroke-width:1; stroke-dasharray:3 4}
+  #chart .today{stroke:#f59e0b; stroke-width:1.6; stroke-dasharray:2 3}
+  #chart .pline{fill:none; stroke:var(--primary2); stroke-width:2.6; stroke-linejoin:round; stroke-linecap:round}
+
+  /* ---------- PHASES + DAY GRID ---------- */
+  .phase{margin:26px 0 4px}
+  .phase-h{display:flex; align-items:center; gap:10px; margin:0 2px 2px}
+  .phase-badge{font-size:.74rem; font-weight:800; padding:4px 12px; border-radius:999px;
+    background:color-mix(in srgb, var(--primary) 16%, var(--surface)); color:var(--primary);
+    border:1px solid color-mix(in srgb, var(--primary) 40%, transparent)}
+  .pmeta{color:var(--mut); font-size:.8rem; margin:0 2px 12px}
+  .days{display:grid; grid-template-columns:1fr; gap:12px}
+  @media (min-width:720px){ .days{grid-template-columns:repeat(auto-fill, minmax(330px,1fr))} }
+
+  .day{padding:12px 14px; min-width:0; transition:border-color .2s, background .2s}
+  .day.done{border-color:var(--okline); background:var(--okbg)}
+  .day.flash{animation:flash 1.4s ease}
+  @keyframes flash{0%,100%{box-shadow:var(--shadow)} 20%{box-shadow:0 0 0 3px var(--primary)}}
+  .dayhead{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+  .daytitle{font-weight:700; font-size:.95rem}
+  .daytag{font-size:.76rem; color:var(--mut); white-space:nowrap; flex:0 0 auto}
+  .daytag.full{color:var(--ok); font-weight:800}
+
+  /* ---------- SESSION (whole row is the 48dp+ touch target / label) ---------- */
+  .sess{display:flex; gap:12px; align-items:flex-start; min-height:48px;
+    padding:10px; margin-top:8px; border-radius:12px; background:var(--surface2);
+    border:1px solid transparent; cursor:pointer; transition:background .15s, transform .05s, border-color .15s;
+    -webkit-user-select:none; user-select:none}
+  .sess:hover{background:var(--surface3)}
+  .sess:active{transform:scale(.995)}
+  .sess.done{background:var(--okbg); border-color:var(--okline)}
+  .chkwrap{flex:0 0 auto; width:32px; height:32px; display:grid; place-items:center; margin-top:1px}
+  .chkwrap input{width:24px; height:24px; margin:0; cursor:pointer; accent-color:var(--ok)}
+  .sbody{flex:1 1 auto; min-width:0}
+  .srow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; margin-bottom:4px}
+  .disc{font-size:.78rem; font-weight:800; padding:3px 10px; border-radius:8px; color:var(--chip-ink);
+    overflow-wrap:anywhere}
+  .sess.done .disc{filter:saturate(.55) brightness(.96)}
+  .carga{font-size:.76rem; color:var(--mut); font-weight:700;
+    background:var(--surface); border:1px solid var(--line); padding:2px 9px; border-radius:8px}
+  ul.temas{margin:2px 0 0; padding-left:20px}
+  ul.temas li{font-size:.85rem; color:var(--txt); margin:1px 0; overflow-wrap:anywhere}
+  .sess.done ul.temas li{color:var(--mut); text-decoration:line-through; text-decoration-color:var(--okstrike)}
+
+  /* ---------- SNACKBAR (Material) ---------- */
+  .snackbar{position:fixed; left:50%; transform:translateX(-50%) translateY(140%);
+    bottom:calc(16px + env(safe-area-inset-bottom)); z-index:40; max-width:min(560px, calc(100vw - 24px));
+    display:flex; align-items:center; gap:14px; padding:12px 12px 12px 18px; border-radius:12px;
+    background:#25324a; color:#eef3fb; box-shadow:0 8px 28px rgba(0,0,0,.4);
+    transition:transform .28s cubic-bezier(.2,.7,.3,1)}
+  .snackbar.show{transform:translateX(-50%) translateY(0)}
+  .snackbar span{font-size:.9rem}
+  .snackbar button{min-height:40px; padding:0 12px; border-radius:20px; border:none; cursor:pointer;
+    background:transparent; color:#5fd0ff; font:inherit; font-weight:800; text-transform:uppercase;
+    font-size:.8rem; letter-spacing:.5px}
+  .snackbar button:hover{background:rgba(255,255,255,.08)}
+
+  footer.foot{margin-top:36px; color:var(--mut2); font-size:.78rem; text-align:center; line-height:1.7}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important; scroll-behavior:auto !important}
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <h1>Cronograma de Estudos — TJPE</h1>
-    <div class="period" id="period"></div>
+  <header class="appbar">
+    <div class="appbar-inner">
+      <h1 class="app-title">Cronograma de Estudos — TJPE</h1>
+      <div class="app-actions">
+        <button class="iconbtn" id="installBtn" type="button" hidden aria-label="Instalar aplicativo no dispositivo">
+          <span class="emoji" aria-hidden="true">⬇️</span><span class="btn-txt">Instalar</span>
+        </button>
+        <button class="iconbtn" id="todayBtn" type="button" aria-label="Ir para o dia de hoje">
+          <span class="emoji" aria-hidden="true">📍</span><span class="btn-txt">Hoje</span>
+        </button>
+        <button class="iconbtn" id="themeBtn" type="button" aria-label="Alternar tema claro/escuro" aria-pressed="false">
+          <span class="emoji" id="themeIcon" aria-hidden="true">🌙</span>
+        </button>
+      </div>
+    </div>
+    <div class="appbar-progress"><i id="barTop"></i></div>
   </header>
 
-  <section class="card summary">
-    <div class="sumgrid">
-      <div class="stat">
-        <div class="big"><span id="doneCount">0</span><span class="sub">/<span id="totalCount">0</span> sessões</span></div>
-        <div class="lbl">Sessões concluídas</div>
-      </div>
-      <div class="stat">
-        <div class="big"><span id="pct">0</span><span class="sub">%</span></div>
-        <div class="lbl">Progresso</div>
-      </div>
-      <div class="stat">
-        <div class="big"><span id="doneHours">0</span><span class="sub">/<span id="totalHours">0</span> h</span></div>
-        <div class="lbl">Carga horária</div>
-      </div>
-      <div class="spacer"></div>
-      <button class="btn" id="resetBtn" type="button">Limpar progresso</button>
-    </div>
-    <div class="bar"><i id="barFill"></i></div>
-  </section>
+  <div class="wrap">
+    <p class="period" id="period"></p>
 
-  <section class="card chartcard">
-    <h2>Progressão — sessões concluídas ao longo dos dias</h2>
-    <div id="chart"></div>
-  </section>
+    <section class="card summary" aria-label="Resumo do progresso">
+      <div class="stats">
+        <div class="stat">
+          <div class="big"><span id="doneCount">0</span><span class="sub">/<span id="totalCount">0</span></span></div>
+          <div class="lbl">Sessões</div>
+        </div>
+        <div class="stat">
+          <div class="big"><span id="pct">0</span><span class="sub">%</span></div>
+          <div class="lbl">Progresso</div>
+        </div>
+        <div class="stat">
+          <div class="big"><span id="doneHours">0</span><span class="sub">/<span id="totalHours">0</span>h</span></div>
+          <div class="lbl">Carga horária</div>
+        </div>
+      </div>
+      <div class="bar" id="barMain" role="progressbar" aria-label="Progresso geral"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="barFill"></i></div>
+      <div class="resetrow">
+        <button class="btn-reset" id="resetBtn" type="button">Limpar progresso</button>
+      </div>
+    </section>
 
-  <main id="phases"></main>
+    <section class="card chartcard" aria-label="Gráfico de progressão">
+      <h2>Progressão — sessões concluídas ao longo dos dias</h2>
+      <div id="chart"></div>
+    </section>
 
-  <footer class="foot">
-    Seu progresso é salvo automaticamente neste navegador. &nbsp;·&nbsp; 146 sessões · 240 h · 73 dias
-  </footer>
-</div>
+    <main id="phases"></main>
+
+    <footer class="foot">
+      Seu progresso é salvo automaticamente neste dispositivo (localStorage).<br>
+      146 sessões · 240 h · 73 dias · 14 disciplinas
+    </footer>
+  </div>
+
+  <div class="snackbar" id="snackbar" role="status" aria-live="polite" hidden>
+    <span id="snackMsg"></span>
+    <button type="button" id="snackAction"></button>
+  </div>
 
 <script id="plano" type="application/json">{"startDate":"2026-07-16","days":[{"date":"2026-07-16","dayLabel":"Dia 1 — 16/07/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Regime jurídico-administrativo","segurança jurídica/confiança legítima (LINDB, arts. 20-30)","Princípios","Organização administrativa","autarquias, fundações, EP/SEM"]},{"disciplina":"Ambiental","minutes":60,"temas":["Princípios","Antropocentrismo alargado x ecocentrismo (vaquejada, rinha de galo)"]}]},{"date":"2026-07-17","dayLabel":"Dia 2 — 17/07/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Fato do produto/serviço (arts. 12-14)","Vício do produto/serviço (arts. 18-25)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Espécies tributárias e competência"]}]},{"date":"2026-07-18","dayLabel":"Dia 3 — 18/07/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Responsabilidade civil","cumulação (Súm. 387 STJ)","Responsabilidade objetiva e risco da atividade (art. 927, §ún.)","fato de terceiro (arts. 932-933) e do incapaz (art. 928)","Fraudes digitais, provedores/plataformas (Marco Civil, arts. 19-21) e LGPD"]},{"disciplina":"Empresarial","minutes":90,"temas":["Recuperação judicial I"]}]},{"date":"2026-07-19","dayLabel":"Dia 4 — 19/07/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Agravo de instrumento","Apelação"]},{"disciplina":"ECA","minutes":90,"temas":["Prescrição na apuração (Súm. 338) e remissão (exclusão/suspensão/extinção)","Procedimento de apuração"]}]},{"date":"2026-07-20","dayLabel":"Dia 5 — 20/07/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Teoria da constituição","Hermenêutica"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Condições de elegibilidade (art. 14, §3º"]}]},{"date":"2026-07-21","dayLabel":"Dia 6 — 21/07/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Inquérito e arquivamento (art. 28","investigação defensiva","indiciamento","ANPP (art. 28-A)"]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["Hierarquia dos tratados","bloco de constitucionalidade"]}]},{"date":"2026-07-22","dayLabel":"Dia 7 — 22/07/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Nexo causal e concausas (art. 13, §1º","imputação objetiva","Erro de tipo x erro de proibição","descriminantes putativas (art. 20, §1º)"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Müller (texto x norma), Häberle (sociedade aberta), Viehweg (tópica)","neoconstitucionalismo e virada kantiana"]}]},{"date":"2026-07-23","dayLabel":"Dia 8 — 23/07/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Terceiro setor (Lei 13.019/2014)","Concurso público","Provimento e vacância","acumulação de cargos"]},{"disciplina":"Empresarial","minutes":60,"temas":["Recuperação judicial II","créditos sujeitos e não sujeitos (trava bancária)"]}]},{"date":"2026-07-24","dayLabel":"Dia 9 — 24/07/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Prescrição quinquenal (art. 27) x decadência","teoria do desvio produtivo do consumidor","Fortuito interno e fraude bancária (Súm. 479)","aplicação do CDC às instituições financeiras (Súm. 297)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Limitações ao poder de tributar"]}]},{"date":"2026-07-25","dayLabel":"Dia 10 — 25/07/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Responsabilidade de notários e registradores (regresso) e de profissionais liber","Juros e correção (Súm. 54 e 362)","transmissibilidade do dano moral aos herdeiros (Súm. 642)","Função social e boa-fé objetiva","deveres anexos","figuras parcelares (venire, supressio, surrectio, tu quoque)"]},{"disciplina":"ECA","minutes":90,"temas":["Adoção"]}]},{"date":"2026-07-26","dayLabel":"Dia 11 — 26/07/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Embargos de declaração","REsp e RExt","Teoria geral dos recursos"]},{"disciplina":"Empresarial","minutes":90,"temas":["Recuperação extrajudicial (art. 163) e recuperação especial de ME/EPP (arts. 70-"]}]},{"date":"2026-07-27","dayLabel":"Dia 12 — 27/07/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Ação penal e justa causa","representação no estelionato (Tema 1007)","trancamento","Competência","IDC (art. 109, §5º)"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Inelegibilidades (LC 64/90 + Ficha Limpa/LC 135)","Desincompatibilização e reeleição","serventuários (Súm. 5 TSE)"]}]},{"date":"2026-07-28","dayLabel":"Dia 13 — 28/07/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Ilicitude","Culpabilidade — teorias","embriaguez e actio libera in causa"]},{"disciplina":"ECA","minutes":60,"temas":["Entrega voluntária (art. 19-A)"]}]},{"date":"2026-07-29","dayLabel":"Dia 14 — 29/07/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Direitos fundamentais","Direitos em espécie (art. 5º)"]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["Controle de convencionalidade","pro homine, effet cliquet"]}]},{"date":"2026-07-30","dayLabel":"Dia 15 — 30/07/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Contratos","extinção (resolução, resilição, distrato)","Seguro","Súm. 402/620/632"]},{"disciplina":"Ambiental","minutes":60,"temas":["Competência legislativa (art. 24) e material","predominância do interesse (leis estaduais mais protetivas)","LC 140/2011"]}]},{"date":"2026-07-31","dayLabel":"Dia 16 — 31/07/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Remuneração","PAD e responsabilidade"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Teoria da justiça","Aristóteles (corretiva x distributiva)"]}]},{"date":"2026-08-01","dayLabel":"Dia 17 — 01/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Penal","minutes":150,"temas":["Concurso de pessoas (arts. 29-30)","Dosimetria — 1ª fase (art. 59","circunstâncias judiciais, vedação ao bis in idem)"]},{"disciplina":"Direitos Humanos","minutes":90,"temas":["SIDH","Casos contra o Brasil"]}]},{"date":"2026-08-02","dayLabel":"Dia 18 — 02/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Precedentes (\"Ouro da FGV\")","IRDR (arts. 976-987)","IAC (art. 947)","distinguishing e overruling","modulação (art. 927, §3º)"]},{"disciplina":"Formação Humanística","minutes":90,"temas":["Dignidade da pessoa humana e bioética","Ética e Estatuto da Magistratura"]}]},{"date":"2026-08-03","dayLabel":"Dia 19 — 03/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Cadeia de custódia (arts. 158-A a 158-F)","Reconhecimento de pessoas (art. 226)"]},{"disciplina":"ECA","minutes":60,"temas":["Guarda (compartilhada x unilateral) e destituição do poder familiar (rito)"]}]},{"date":"2026-08-04","dayLabel":"Dia 20 — 04/08/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Cláusulas abusivas (art. 51","vedação à arbitragem compulsória","Contratos bancários","Súm. 596 STF), consignado, revisão"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Imunidades"]}]},{"date":"2026-08-05","dayLabel":"Dia 21 — 05/08/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Remédios constitucionais","Direitos sociais","seguridade","Nacionalidade (art. 12) e direitos políticos (art. 14)","partidos"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Sistema proporcional"]}]},{"date":"2026-08-06","dayLabel":"Dia 22 — 06/08/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Ato administrativo","Extinção dos atos","Poder de polícia"]},{"disciplina":"Ambiental","minutes":60,"temas":["Responsabilidade civil ambiental","Responsabilidade administrativa (subjetiva"]}]},{"date":"2026-08-07","dayLabel":"Dia 23 — 07/08/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Tutela de urgência (antecipada e cautelar)","Estabilização da tutela antecipada (art. 304) e ação de revisão (2 anos)"]},{"disciplina":"Empresarial","minutes":60,"temas":["Falência"]}]},{"date":"2026-08-08","dayLabel":"Dia 24 — 08/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Doação","Compra e venda e pactos adjetos","Fiança e garantias","aval x fiança","Mandato","transação (art. 844)"]},{"disciplina":"Consumidor","minutes":90,"temas":["Planos de saúde","Súm. 608)"]}]},{"date":"2026-08-09","dayLabel":"Dia 25 — 09/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Tutela de evidência (art. 311) e tutela cautelar antecedente (art. 308)","Competência"]},{"disciplina":"ECA","minutes":90,"temas":["Acolhimento institucional/familiar","Conselho Tutelar (\"Alta Incidência FGV\")"]}]},{"date":"2026-08-10","dayLabel":"Dia 26 — 10/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Dosimetria","compensação confissão x reincidência","Súm. 231)","Súm. 443) e concurso de crimes (arts. 69-71)"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Uso de redes sociais pelo magistrado (Res. CNJ 305/2019)","imparcialidade","Direito digital"]}]},{"date":"2026-08-11","dayLabel":"Dia 27 — 11/08/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Prova digital","Busca e apreensão domiciliar","crime permanente"]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["Opiniões consultivas"]}]},{"date":"2026-08-12","dayLabel":"Dia 28 — 12/08/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Repartição de competências","Intervenção federal e estadual","ADI interventiva"]},{"disciplina":"ECA","minutes":60,"temas":["Competência da Infância x Vara de Família (art. 98","art. 148 — absoluta)"]}]},{"date":"2026-08-13","dayLabel":"Dia 29 — 13/08/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Litisconsórcio (necessário/unitário/facultativo/multitudinário) e intervenção de","IDPJ (arts. 133-137) e amicus curiae (art. 138)"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Federações partidárias (Lei 14.208/2021) e fidelidade partidária (justa causa)","Cota de gênero (art. 10, §3º) e fraude (candidaturas laranjas)","cota racial (FEFC)"]}]},{"date":"2026-08-14","dayLabel":"Dia 30 — 14/08/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Superendividamento (Lei 14.181/2021)","Conceito de consumidor (finalismo mitigado) e fornecedor","bystander (arts. 17 e 29)","serviços públicos (uti singuli x uti universi)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Responsabilidade tributária","Súm. 435), grupo econômico (art. 124), sucessão (art. 132)","Lançamento e crédito"]}]},{"date":"2026-08-15","dayLabel":"Dia 31 — 15/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Empreitada, prestação de serviços e locação (Lei 8.245","Pessoas naturais","comoriência (art. 8º)","ausência","Direitos da personalidade (arts. 11-21)"]},{"disciplina":"Empresarial","minutes":90,"temas":["Ação revocatória e ineficácia (arts. 130-138)","insolvência transnacional (COMI, arts. 167-A/Y)"]}]},{"date":"2026-08-16","dayLabel":"Dia 32 — 16/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":150,"temas":["Prova ilícita (art. 157) e nulidades (pas de nullité sans grief","nulidade de algibeira)","Prisão preventiva (arts. 312-313)","Audiência de custódia (art. 310","Res. CNJ 213)"]},{"disciplina":"Ambiental","minutes":90,"temas":["Licenciamento","competência","Código Florestal"]}]},{"date":"2026-08-17","dayLabel":"Dia 33 — 17/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Pessoa jurídica e desconsideração (art. 50","Lei da Liberdade Econômica)","Bens","bem de família (legal x convencional)"]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["População LGBTQIA+","Igualdade racial"]}]},{"date":"2026-08-18","dayLabel":"Dia 34 — 18/08/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Prescrição","Extinção da punibilidade"]},{"disciplina":"Empresarial","minutes":60,"temas":["Teoria geral da empresa"]}]},{"date":"2026-08-19","dayLabel":"Dia 35 — 19/08/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Administração Pública constitucional (art. 37)","Poder Legislativo","CPI (reserva de jurisdição)","TCU (Súm. 347)"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["IA no Judiciário (Res. CNJ 332/615) e LGPD no setor público","Antidiscriminação"]}]},{"date":"2026-08-20","dayLabel":"Dia 36 — 20/08/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Lei 14.133/2021","Contratação direta (\"Ouro da FGV\")","credenciamento","SRP e \"carona\"","Modalidades e critérios de julgamento","diálogo competitivo"]},{"disciplina":"ECA","minutes":60,"temas":["Autorização de viagem nacional e internacional (arts. 82-85","Res. CNJ 295/2019)"]}]},{"date":"2026-08-21","dayLabel":"Dia 37 — 21/08/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Petição inicial (art. 319), emenda (arts. 321/329), improcedência liminar","litigância predatória (art. 330)","Distribuição dinâmica do ônus da prova (art. 373, §1º)","provas em espécie e prova emprestada"]},{"disciplina":"Financeiro/Tributário","minutes":60,"temas":["Decadência e prescrição (art. 150, §4º x 173, I","Súm. 555)","prescrição intercorrente (Súm. 314/Tema 390)"]}]},{"date":"2026-08-22","dayLabel":"Dia 38 — 22/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Negócio jurídico e defeitos","simulação (art. 167)","Prescrição e decadência","Adimplemento substancial","mora","cláusula penal"]},{"disciplina":"Direitos Humanos","minutes":90,"temas":["Povos indígenas","Direitos das mulheres"]}]},{"date":"2026-08-23","dayLabel":"Dia 39 — 23/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Sentença e coisa julgada","fundamentação analítica (art. 489, §1º)","remessa necessária e dispensa (art. 496)","Normas fundamentais e NJP"]},{"disciplina":"Consumidor","minutes":90,"temas":["Diálogo das fontes (art. 7º","CC, arts. 113/187/422)"]}]},{"date":"2026-08-24","dayLabel":"Dia 40 — 24/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Tribunal do Júri","Emendatio libelli (art. 383) x mutatio libelli (art. 384)"]},{"disciplina":"Empresarial","minutes":60,"temas":["Sociedade limitada","SLU"]}]},{"date":"2026-08-25","dayLabel":"Dia 41 — 25/08/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Oferta e publicidade","Inversão do ônus da prova (art. 6º, VIII)","momento (instrução x julgamento)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["ICMS","Tema 1093), ICMS-ST/restituição (Tema 201)"]}]},{"date":"2026-08-26","dayLabel":"Dia 42 — 26/08/2026 (quarta-feira) — Fase 1","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Processo legislativo","Poder Judiciário","Reclamação constitucional e súmula vinculante (edição/cancelamento)"]},{"disciplina":"ECA","minutes":60,"temas":["Crimes e infrações administrativas"]}]},{"date":"2026-08-27","dayLabel":"Dia 43 — 27/08/2026 (quinta-feira) — Fase 1","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Contratos administrativos","Improbidade (Lei 8.429 + 14.230/21)","Improbidade","Tema 1199), sanções, legitimidade do MP, ANPC"]},{"disciplina":"Ambiental","minutes":60,"temas":["SNUC (Lei 9.985/2000)","PNMA (Lei 6.938/81)","inaplicabilidade do fato consumado (Súm. 613)"]}]},{"date":"2026-08-28","dayLabel":"Dia 44 — 28/08/2026 (sexta-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Homicídio e feminicídio autônomo (art. 121-A","privilegiado-qualificado","Lesão corporal e violência doméstica (Súm. 542)","Furto (privilégio — Súm. 511","qualificado","repouso noturno"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Ações eleitorais","Abuso de poder econômico/político e condutas vedadas (art. 73 Lei 9.504)"]}]},{"date":"2026-08-29","dayLabel":"Dia 45 — 29/08/2026 (sábado) — Fase 1","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Posse","Propriedade e usucapião","função social","Direitos reais sobre coisa alheia","condomínio edilício e multipropriedade (art. 1.358-C)","vizinhança"]},{"disciplina":"Ambiental","minutes":90,"temas":["Crimes ambientais (Lei 9.605/98)"]}]},{"date":"2026-08-30","dayLabel":"Dia 46 — 30/08/2026 (domingo) — Fase 1","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Cumprimento de sentença contra a Fazenda (arts. 534-535)","precatórios e RPV (art. 100 CF)","Exceção de pré-executividade (Súm. 393) e embargos à execução (garantia do juízo","Fraude à execução (Súm. 375) e medidas executivas atípicas (art. 139, IV"]},{"disciplina":"Direitos Humanos","minutes":90,"temas":["IDC (art. 109, §5º)","audiência de custódia como direito humano","TPI (Estatuto de Roma)"]}]},{"date":"2026-08-31","dayLabel":"Dia 47 — 31/08/2026 (segunda-feira) — Fase 1","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Recursos","Colaboração premiada (Lei 12.850, art. 4º)"]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Protocolo para Julgamento com Perspectiva de Gênero (Res. CNJ 492/2023)","Sociologia"]}]},{"date":"2026-09-01","dayLabel":"Dia 48 — 01/09/2026 (terça-feira) — Fase 1","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Estelionato (art. 171)","Crimes contra a dignidade sexual","Súm. 593/670)","importunação (art. 215-A)","Crimes contra a Administração Pública","insignificância inaplicável (Súm. 599)"]},{"disciplina":"ECA","minutes":60,"temas":["Direitos fundamentais e prioridade absoluta","primeira infância","Lei Henry Borel (14.344/2022)"]}]},{"date":"2026-09-02","dayLabel":"Dia 49 — 02/09/2026 (quarta-feira) — Fase 2","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Funções essenciais à Justiça","Controle difuso","Controle concentrado"]},{"disciplina":"Ambiental","minutes":60,"temas":["Novos temas (inovações)","logística reversa (12.305/2010)"]}]},{"date":"2026-09-03","dayLabel":"Dia 50 — 03/09/2026 (quinta-feira) — Fase 2","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Responsabilidade civil do Estado (art. 37, §6º)","Serviços públicos"]},{"disciplina":"Processo Penal","minutes":60,"temas":["Lei de Drogas processual","Lei Maria da Penha processual"]}]},{"date":"2026-09-04","dayLabel":"Dia 51 — 04/09/2026 (sexta-feira) — Fase 2","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Bancos de dados (art. 43)","cadastro positivo","Desconsideração (teoria menor — art. 28)","tutela coletiva (coisa julgada erga omnes, transporte in utilibus, Tema 1075)","energia elétrica (ANEEL 1.000/2021","Súm. 187 STF)"]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["ITCMD","ISS","Execução fiscal (Lei 6.830/80)","Tema 1184)"]}]},{"date":"2026-09-05","dayLabel":"Dia 52 — 05/09/2026 (sábado) — Fase 2","sessions":[{"disciplina":"Administrativo","minutes":150,"temas":["Intervenção na propriedade","indireta/tredestinação), servidão, requisição","Tombamento (DL 25/37","Controle","Lei Anticorrupção (12.846/2013)","LGPD na Administração"]},{"disciplina":"Civil","minutes":90,"temas":["Casamento","regime de bens (Súm. 377 STF)","pacto antenupcial"]}]},{"date":"2026-09-06","dayLabel":"Dia 53 — 06/09/2026 (domingo) — Fase 2","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Ações possessórias (fungibilidade, caráter dúplice) e monitória (Súm. 299/531/50","Embargos de terceiro (Súm. 303) e ação rescisória (hipóteses, prazo"]},{"disciplina":"Empresarial","minutes":90,"temas":["Sociedade anônima","Desconsideração da PJ"]}]},{"date":"2026-09-07","dayLabel":"Dia 54 — 07/09/2026 (segunda-feira) — Fase 2","sessions":[{"disciplina":"Civil","minutes":120,"temas":["União estável","guarda compartilhada (art. 1.584, §2º) e alienação parental","alimentos (gravídicos, avoengos","divórcio (legitimidade)"]},{"disciplina":"Eleitoral","minutes":60,"temas":["Propaganda eleitoral","Prestação de contas e financiamento"]}]},{"date":"2026-09-08","dayLabel":"Dia 55 — 08/09/2026 (terça-feira) — Fase 2","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["JECrim (transação, sursis processual)","lavagem (autonomia)","interceptação (Lei 9.296)","CTB art. 301 (Lei 14.599/2023)","consolidação \"Ouro da FGV\""]},{"disciplina":"ECA","minutes":60,"temas":["Escuta especializada e depoimento especial (Lei 13.431/2017)","bullying/cyberbullying (Lei 14.811/2024"]}]},{"date":"2026-09-09","dayLabel":"Dia 56 — 09/09/2026 (quarta-feira) — Fase 2","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Modulação de efeitos (art. 27 da Lei 9.868","quórum) e efeito repristinatório","Controle estadual"]},{"disciplina":"Penal","minutes":60,"temas":["Lei de Drogas — usuário (art. 28","Tema 506/40g), tráfico privilegiado (§4º), associação"]}]},{"date":"2026-09-10","dayLabel":"Dia 57 — 10/09/2026 (quinta-feira) — Fase 2","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Mandado de segurança (Lei 12.016","honorários — Súm. 105/512","prazo)","Processo coletivo"]},{"disciplina":"Financeiro/Tributário","minutes":60,"temas":["Compensação e repetição de indébito (Súm. 213/460)","MS em matéria tributária","Orçamento — PPA/LDO/LOA","princípios","Emendas parlamentares e orçamento impositivo"]}]},{"date":"2026-09-11","dayLabel":"Dia 58 — 11/09/2026 (sexta-feira) — Fase 2","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Sucessão legítima","Sucessão testamentária","herança jacente/vacante","inventário e partilha"]},{"disciplina":"Empresarial","minutes":60,"temas":["Títulos de crédito","Espécies","protesto"]}]},{"date":"2026-09-12","dayLabel":"Dia 59 — 12/09/2026 (sábado) — Fase 2","sessions":[{"disciplina":"Civil","minutes":150,"temas":["LINDB","arts. 20-30 (consequencialismo, erro grosseiro)","súmulas civis do rol (Súm. 54/332/362/377/387/403/549/596/610/642) e \"Ouro\" de c"]},{"disciplina":"ECA","minutes":90,"temas":["Consolidação"]}]},{"date":"2026-09-13","dayLabel":"Dia 60 — 13/09/2026 (domingo) — Fase 2","sessions":[{"disciplina":"Constitucional","minutes":150,"temas":["Ordem econômica (art. 170) e social (art. 225)","inovações — EC 132/2023 e EC 134/2025","marco temporal indígena (Tema 1031)"]},{"disciplina":"Processo Civil","minutes":90,"temas":["Juizados Especiais da Fazenda Pública (Lei 12.153/09) e JEC (Lei 9.099)"]}]},{"date":"2026-09-14","dayLabel":"Dia 61 — 14/09/2026 (segunda-feira) — Fase 2","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Pegadinhas centrais aplicadas","consolidação de inovações do rol (Lei 14.133/2021","Tema 1199) ."]},{"disciplina":"Empresarial","minutes":60,"temas":["Propriedade industrial","evergreening/skinny labeling","marcas","Contratos empresariais"]}]},{"date":"2026-09-15","dayLabel":"Dia 62 — 15/09/2026 (terça-feira) — Fase 2","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Pegadinhas centrais aplicadas","consolidação \"Ouro da FGV\" de precedentes e litigância predatória ."]},{"disciplina":"Penal","minutes":60,"temas":["Lei Maria da Penha (Súm. 536/542/588/589)","IA na violência psicológica (art. 147-B"]}]},{"date":"2026-09-16","dayLabel":"Dia 63 — 16/09/2026 (quarta-feira) — Fase 2","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Pegadinhas civis centrais","inovações civis do rol (Lei 14.905/2024","Marco das Garantias — Lei 14.711/2023) ."]},{"disciplina":"Financeiro/Tributário","minutes":60,"temas":["Reforma Tributária","LRF (limites de pessoal, renúncia de receita, vedações de fim de mandato), dívid"]}]},{"date":"2026-09-17","dayLabel":"Dia 64 — 17/09/2026 (quinta-feira) — Fase 2","sessions":[{"disciplina":"Processo Civil","minutes":120,"temas":["Bateria mista final dos 26 microtemas","releitura de destaques dos pontos de maior erro ."]},{"disciplina":"Empresarial","minutes":60,"temas":["Cédulas de crédito (bancário","rural — DL 167/67)","direito concorrencial (CADE","Inovações"]}]},{"date":"2026-09-18","dayLabel":"Dia 65 — 18/09/2026 (sexta-feira) — Fase 2","sessions":[{"disciplina":"Civil","minutes":120,"temas":["Bateria mista final dos 31 microtemas","releitura de destaques dos pontos de maior erro ."]},{"disciplina":"ECA","minutes":60,"temas":["Bateria mista final dos 13 microtemas"]}]},{"date":"2026-09-19","dayLabel":"Dia 66 — 19/09/2026 (sábado) — Fase 2","sessions":[{"disciplina":"Penal","minutes":150,"temas":["Estatuto do Desarmamento","Organização criminosa e colaboração premiada (Lei 12.850)","crimes ambientais (dupla imputação)","abuso de autoridade (dolo específico)","Execução penal","SV 9), remição (Tema 1278), RDD"]},{"disciplina":"Formação Humanística","minutes":90,"temas":["Pragmatismo e AED","heurísticas e vieses","MASCs (mediação/arbitragem","Res. 125/2010)","consolidação das resoluções CNJ do rol (Res. 213/305/332/345/372/385/492/615) po"]}]},{"date":"2026-09-20","dayLabel":"Dia 67 — 20/09/2026 (domingo) — Fase 3","sessions":[{"disciplina":"Processo Civil","minutes":150,"temas":["Análise de erros do simulado no eixo processual civil + revisão dirigida dos mic"]},{"disciplina":"Civil","minutes":90,"temas":["Análise de erros do simulado no eixo civil + revisão dirigida (responsabilidade,"]}]},{"date":"2026-09-21","dayLabel":"Dia 68 — 21/09/2026 (segunda-feira) — Fase 3","sessions":[{"disciplina":"Penal","minutes":120,"temas":["Revisão final orientada pelos erros do Simulado nº 1","questões FGV cronometradas dos microtemas de maior erro ."]},{"disciplina":"Eleitoral","minutes":60,"temas":["Revisão final por erros","releitura de destaques ."]}]},{"date":"2026-09-22","dayLabel":"Dia 69 — 22/09/2026 (terça-feira) — Fase 3","sessions":[{"disciplina":"Processo Penal","minutes":120,"temas":["Revisão final orientada pelos erros","questões FGV cronometradas ."]},{"disciplina":"Formação Humanística","minutes":60,"temas":["Releitura final de destaques"]}]},{"date":"2026-09-23","dayLabel":"Dia 70 — 23/09/2026 (quarta-feira) — Fase 3","sessions":[{"disciplina":"Constitucional","minutes":120,"temas":["Revisão final orientada pelos erros","questões FGV cronometradas ."]},{"disciplina":"Direitos Humanos","minutes":60,"temas":["Consolidação final","entrega x extradição","Comissão x Corte IDH) e releitura de destaques (tratados, convencionalidade, cas"]}]},{"date":"2026-09-24","dayLabel":"Dia 71 — 24/09/2026 (quinta-feira) — Fase 3","sessions":[{"disciplina":"Administrativo","minutes":120,"temas":["Revisão final orientada pelos erros","questões FGV cronometradas ."]},{"disciplina":"Ambiental","minutes":60,"temas":["Releitura final de destaques"]}]},{"date":"2026-09-25","dayLabel":"Dia 72 — 25/09/2026 (sexta-feira) — Fase 3","sessions":[{"disciplina":"Consumidor","minutes":105,"temas":["Revisão final orientada pelos erros","questões FGV cronometradas ."]},{"disciplina":"Financeiro/Tributário","minutes":75,"temas":["Releitura final de destaques"]}]},{"date":"2026-09-26","dayLabel":"Dia 73 — 26/09/2026 (sábado) — Fase 3 — Véspera da prova","sessions":[{"disciplina":"Civil","minutes":150,"temas":["Revisão final leve","sem teoria nova ."]},{"disciplina":"Processo Civil","minutes":90,"temas":["Revisão final leve","sem teoria nova ."]}]}]}</script>
 <script>
 "use strict";
 const PLANO = JSON.parse(document.getElementById('plano').textContent);
 const STORE_KEY = 'crono-tjpe-v1';
+const THEME_KEY = 'crono-tjpe-theme';
 
 const DISC_COLORS = {
   "Administrativo":"#60a5fa","Ambiental":"#34d399","Civil":"#f472b6",
@@ -142,26 +264,46 @@ const DISC_COLORS = {
   "Financeiro/Tributário":"#2dd4bf","Formação Humanística":"#e879f9",
   "Penal":"#f87171","Processo Civil":"#818cf8","Processo Penal":"#fca5a5"
 };
-function discColor(d){ return DISC_COLORS[d] || "#94a3b8"; }
-
-function fmtMin(m){
-  const h = Math.floor(m/60), r = m%60;
-  return h + "h" + String(r).padStart(2,'0');
-}
-function sessionKey(date, idx){ return date + "#" + idx; }
+const discColor = d => DISC_COLORS[d] || "#94a3b8";
+const fmtMin = m => Math.floor(m/60) + "h" + String(m%60).padStart(2,'0');
+const sessionKey = (date, idx) => date + "#" + idx;
+const escapeHtml = s => s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 function loadDone(){
-  try{
-    const raw = localStorage.getItem(STORE_KEY);
-    return new Set(raw ? JSON.parse(raw) : []);
-  }catch(e){ return new Set(); }
+  try{ const r = localStorage.getItem(STORE_KEY); return new Set(r?JSON.parse(r):[]); }
+  catch(e){ return new Set(); }
 }
-function saveDone(set){
-  try{ localStorage.setItem(STORE_KEY, JSON.stringify([...set])); }catch(e){}
-}
+function saveDone(set){ try{ localStorage.setItem(STORE_KEY, JSON.stringify([...set])); }catch(e){} }
 let done = loadDone();
 
-// ---- totals ----
+/* ---------- theme ---------- */
+function effectiveTheme(){
+  const forced = document.documentElement.getAttribute('data-theme');
+  if(forced) return forced;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function applyTheme(t){
+  const root = document.documentElement;
+  if(t==='light'||t==='dark') root.setAttribute('data-theme', t);
+  else root.removeAttribute('data-theme');
+  const eff = effectiveTheme();
+  const btn = document.getElementById('themeBtn');
+  document.getElementById('themeIcon').textContent = eff==='dark' ? '☀️' : '🌙';
+  btn.setAttribute('aria-pressed', eff==='dark' ? 'true':'false');
+  btn.setAttribute('aria-label', eff==='dark' ? 'Ativar tema claro' : 'Ativar tema escuro');
+}
+applyTheme(localStorage.getItem(THEME_KEY));
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  const next = effectiveTheme()==='dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+  renderChart();
+});
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
+  if(!localStorage.getItem(THEME_KEY)){ applyTheme(null); renderChart(); }
+});
+
+/* ---------- data prep ---------- */
 const days = PLANO.days;
 let TOTAL_SESS = 0, TOTAL_MIN = 0;
 const phaseOrder = [];
@@ -171,226 +313,247 @@ for(const day of days){
   day._phase = m ? m[1] : "—";
   if(!phaseOrder.includes(day._phase)) phaseOrder.push(day._phase);
 }
+const isDone = (date, idx) => done.has(sessionKey(date, idx));
+function dayDoneCount(day){ let c=0; day.sessions.forEach((s,i)=>{ if(isDone(day.date,i)) c++; }); return c; }
+function totals(){ let ds=0,dm=0; days.forEach(d=>d.sessions.forEach((s,i)=>{ if(isDone(d.date,i)){ds++;dm+=s.minutes;} })); return {ds,dm}; }
+function todayISO(){ const t=new Date(); const z=n=>String(n).padStart(2,'0'); return t.getFullYear()+'-'+z(t.getMonth()+1)+'-'+z(t.getDate()); }
+function todayIndex(){ const iso=todayISO(); return days.findIndex(d=>d.date===iso); }
 
-// ---- helpers over current progress ----
-function isDone(date, idx){ return done.has(sessionKey(date, idx)); }
-function dayDoneCount(day, di){
-  let c = 0; day.sessions.forEach((s,i)=>{ if(isDone(day.date,i)) c++; }); return c;
-}
-function totals(){
-  let ds=0, dm=0;
-  days.forEach(day=>day.sessions.forEach((s,i)=>{ if(isDone(day.date,i)){ ds++; dm+=s.minutes; }}));
-  return {ds, dm};
-}
-
-// ---- render summary ----
+/* ---------- summary ---------- */
 function renderSummary(){
-  const {ds, dm} = totals();
+  const {ds,dm} = totals();
+  const pct = Math.round(ds/TOTAL_SESS*100);
   document.getElementById('doneCount').textContent = ds;
   document.getElementById('totalCount').textContent = TOTAL_SESS;
-  document.getElementById('pct').textContent = Math.round(ds/TOTAL_SESS*100);
+  document.getElementById('pct').textContent = pct;
   document.getElementById('doneHours').textContent = (dm/60).toFixed(1).replace('.',',');
   document.getElementById('totalHours').textContent = Math.round(TOTAL_MIN/60);
-  document.getElementById('barFill').style.width = (ds/TOTAL_SESS*100) + '%';
+  document.getElementById('barFill').style.width = pct + '%';
+  document.getElementById('barTop').style.width = pct + '%';
+  const bar = document.getElementById('barMain');
+  bar.setAttribute('aria-valuenow', pct);
+  bar.setAttribute('aria-valuetext', ds+' de '+TOTAL_SESS+' sessões concluídas ('+pct+'%)');
 }
 
-// ---- chart ----
-function computeCumulative(){
-  // cumulative completed sessions up to and including each day index
-  const arr = []; let run = 0;
-  days.forEach(day=>{ run += dayDoneCount(day); arr.push(run); });
-  return arr;
-}
-function todayIndex(){
-  const t = new Date(); t.setHours(0,0,0,0);
-  for(let i=0;i<days.length;i++){
-    const d = new Date(days[i].date + "T00:00:00");
-    if(d.getTime() === t.getTime()) return i;
-  }
-  return -1;
-}
+/* ---------- chart (rendered at real pixel size for crisp text) ---------- */
+function computeCumulative(){ const a=[]; let r=0; days.forEach(d=>{ r+=dayDoneCount(d); a.push(r); }); return a; }
 function renderChart(){
-  const W=920, H=320, padL=42, padR=14, padT=14, padB=34;
-  const n = days.length;
-  const cum = computeCumulative();
-  const maxY = TOTAL_SESS;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const host = document.getElementById('chart');
+  const W = Math.max(300, Math.floor(host.clientWidth || 340));
+  const H = W < 520 ? 230 : 300;
+  const n = days.length, cum = computeCumulative(), maxY = TOTAL_SESS;
+  const padL = W<420?34:42, padR=12, padT=16, padB=30;
+  const plotW = W-padL-padR, plotH = H-padT-padB;
   const x = i => padL + (n<=1?0:(i/(n-1))*plotW);
   const y = v => padT + plotH - (v/maxY)*plotH;
+  const fsAxis = W<420?10:11, fsPhase = W<420?10:11;
 
-  // y gridlines every 25% of total
-  let grid = "", ylab = "";
-  const steps = 4;
-  for(let k=0;k<=steps;k++){
-    const val = maxY*k/steps, yy = y(val);
+  let grid="", ylab="";
+  for(let k=0;k<=4;k++){
+    const val=maxY*k/4, yy=y(val);
     grid += `<line class="grid" x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}"/>`;
-    ylab += `<text x="${padL-6}" y="${(yy+3.5).toFixed(1)}" text-anchor="end">${Math.round(val)}</text>`;
+    ylab += `<text x="${padL-6}" y="${(yy+3.6).toFixed(1)}" text-anchor="end" font-size="${fsAxis}">${Math.round(val)}</text>`;
   }
-  // phase boundary vertical lines + labels
-  let phaseMarks = "";
+  let phaseMarks="", plabels="", start=0;
   for(let i=1;i<n;i++){
-    if(days[i]._phase !== days[i-1]._phase){
-      const xx = (x(i)+x(i-1))/2;
+    if(days[i]._phase!==days[i-1]._phase){
+      const xx=(x(i)+x(i-1))/2;
       phaseMarks += `<line class="phaseln" x1="${xx.toFixed(1)}" y1="${padT}" x2="${xx.toFixed(1)}" y2="${padT+plotH}"/>`;
     }
   }
-  // phase labels centered per phase run
-  let plabels = "";
-  let start = 0;
   for(let i=1;i<=n;i++){
-    if(i===n || days[i]._phase !== days[start]._phase){
-      const mid = (x(start)+x(i-1))/2;
-      plabels += `<text class="plabel" x="${mid.toFixed(1)}" y="${(padT+12)}" text-anchor="middle">Fase ${days[start]._phase}</text>`;
-      start = i;
+    if(i===n || days[i]._phase!==days[start]._phase){
+      const mid=(x(start)+x(i-1))/2;
+      plabels += `<text x="${mid.toFixed(1)}" y="${padT+11}" text-anchor="middle" font-size="${fsPhase}" fill="var(--mut)">Fase ${days[start]._phase}</text>`;
+      start=i;
     }
   }
-  // x labels: show ~every 10 days (day numbers) + last
-  let xlab = "";
-  for(let i=0;i<n;i+=10){
-    xlab += `<text x="${x(i).toFixed(1)}" y="${H-padB+18}" text-anchor="middle">${i+1}</text>`;
-  }
-  xlab += `<text x="${x(n-1).toFixed(1)}" y="${H-padB+18}" text-anchor="middle">${n}</text>`;
+  const xstep = W<420?15:10;
+  let xlab="";
+  for(let i=0;i<n;i+=xstep){ xlab += `<text x="${x(i).toFixed(1)}" y="${H-padB+16}" text-anchor="middle" font-size="${fsAxis}">${i+1}</text>`; }
+  xlab += `<text x="${x(n-1).toFixed(1)}" y="${H-padB+16}" text-anchor="middle" font-size="${fsAxis}">${n}</text>`;
 
-  // line + area path
-  let line = "";
-  cum.forEach((v,i)=>{ line += (i===0?"M":"L") + x(i).toFixed(1) + " " + y(v).toFixed(1) + " "; });
+  let line=""; cum.forEach((v,i)=>{ line += (i===0?"M":"L")+x(i).toFixed(1)+" "+y(v).toFixed(1)+" "; });
   const area = `M${x(0).toFixed(1)} ${y(0).toFixed(1)} ` +
     cum.map((v,i)=>`L${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" ") +
     ` L${x(n-1).toFixed(1)} ${y(0).toFixed(1)} Z`;
 
-  // today marker
   const ti = todayIndex();
-  let today = "";
+  let today="";
   if(ti>=0){
-    today = `<line class="today" x1="${x(ti).toFixed(1)}" y1="${padT}" x2="${x(ti).toFixed(1)}" y2="${padT+plotH}"/>` +
-      `<text x="${x(ti).toFixed(1)}" y="${padT-2}" text-anchor="middle" fill="#fbbf24">hoje</text>`;
+    today = `<line class="today" x1="${x(ti).toFixed(1)}" y1="${padT}" x2="${x(ti).toFixed(1)}" y2="${padT+plotH}"/>`+
+      `<text x="${x(ti).toFixed(1)}" y="${padT-3}" text-anchor="middle" font-size="${fsAxis}" fill="#f59e0b" font-weight="700">hoje</text>`;
   }
-  // last point dot
-  const lastV = cum[n-1];
-  const dot = `<circle cx="${x(n-1).toFixed(1)}" cy="${y(lastV).toFixed(1)}" r="4" fill="#22d3ee"/>`;
+  const dot = `<circle cx="${x(n-1).toFixed(1)}" cy="${y(cum[n-1]).toFixed(1)}" r="4" fill="var(--primary2)"/>`;
 
-  const svg = `
-  <svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"
-       aria-label="Gráfico de progressão: ${lastV} de ${maxY} sessões concluídas">
-    <defs>
-      <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.35"/>
-        <stop offset="100%" stop-color="#22d3ee" stop-opacity="0.02"/>
-      </linearGradient>
-    </defs>
+  host.innerHTML = `
+  <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img"
+       aria-label="Progressão: ${cum[n-1]} de ${maxY} sessões concluídas ao longo de ${n} dias">
+    <defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--primary2)" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="var(--primary2)" stop-opacity="0.02"/>
+    </linearGradient></defs>
     ${grid}${phaseMarks}
     <line class="axis" x1="${padL}" y1="${padT+plotH}" x2="${W-padR}" y2="${padT+plotH}"/>
     <line class="axis" x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+plotH}"/>
     ${ylab}${xlab}${plabels}
-    <path class="area" d="${area}"/>
+    <path d="${area}" fill="url(#grad)"/>
     <path class="pline" d="${line.trim()}"/>
     ${today}${dot}
-    <text x="${(padL+ (W-padR-padL)/2).toFixed(1)}" y="${H-4}" text-anchor="middle">Dia do cronograma</text>
   </svg>`;
-  document.getElementById('chart').innerHTML = svg;
 }
 
-// ---- render days grouped by phase ----
+/* ---------- render days grouped by phase ---------- */
 function renderPhases(){
   const root = document.getElementById('phases');
   root.innerHTML = "";
   for(const ph of phaseOrder){
     const pdays = days.filter(d=>d._phase===ph);
-    let sess=0, mins=0;
-    pdays.forEach(d=>d.sessions.forEach(s=>{sess++;mins+=s.minutes;}));
-    const sec = document.createElement('section');
-    sec.className = 'phase';
-    sec.innerHTML =
-      `<h2><span class="phase-badge">Fase ${ph}</span></h2>` +
-      `<p class="pmeta">${pdays.length} dias · ${sess} sessões · ${(mins/60).toFixed(0)} h</p>`;
+    let sess=0, mins=0; pdays.forEach(d=>d.sessions.forEach(s=>{sess++;mins+=s.minutes;}));
+    const sec = document.createElement('section'); sec.className='phase';
+    sec.innerHTML = `<div class="phase-h"><span class="phase-badge">Fase ${ph}</span></div>`+
+      `<p class="pmeta">${pdays.length} dias · ${sess} sessões · ${Math.round(mins/60)} h</p>`+
+      `<div class="days"></div>`;
+    const grid = sec.querySelector('.days');
     pdays.forEach(day=>{
-      // strip "— Fase N" from label for cleaner title
       const title = day.dayLabel.replace(/\s*—\s*Fase\s*[0-9]+\s*$/,'');
       const card = document.createElement('article');
-      card.className = 'card day';
-      card.dataset.date = day.date;
-      let sHtml = "";
+      card.className='card day'; card.dataset.date=day.date;
+      let sHtml="";
       day.sessions.forEach((s,i)=>{
-        const key = sessionKey(day.date,i);
         const checked = isDone(day.date,i);
-        const col = discColor(s.disciplina);
         const temas = s.temas.map(t=>`<li>${escapeHtml(t)}</li>`).join("");
-        sHtml +=
-          `<div class="sess${checked?' done':''}" data-key="${key}">
-            <label class="chk"><input type="checkbox" data-key="${key}" ${checked?'checked':''}></label>
-            <div class="sbody">
-              <div class="srow">
-                <span class="disc" style="background:${col}">${escapeHtml(s.disciplina)}</span>
-                <span class="cargatag">${fmtMin(s.minutes)}</span>
-              </div>
+        const alabel = escapeHtml(`${s.disciplina}, ${fmtMin(s.minutes)} — ${title}, sessão ${i+1}`);
+        sHtml += `<label class="sess${checked?' done':''}" data-key="${sessionKey(day.date,i)}">
+            <span class="chkwrap"><input type="checkbox" ${checked?'checked':''} aria-label="${alabel}"></span>
+            <span class="sbody">
+              <span class="srow">
+                <span class="disc" style="background:${discColor(s.disciplina)}">${escapeHtml(s.disciplina)}</span>
+                <span class="carga">${fmtMin(s.minutes)}</span>
+              </span>
               <ul class="temas">${temas}</ul>
-            </div>
-          </div>`;
+            </span>
+          </label>`;
       });
-      card.innerHTML =
-        `<div class="dayhead">
-           <span class="daytitle">${escapeHtml(title)}</span>
-           <span class="daytag" data-daytag></span>
-         </div>${sHtml}`;
-      sec.appendChild(card);
+      card.innerHTML = `<div class="dayhead"><span class="daytitle">${escapeHtml(title)}</span>`+
+        `<span class="daytag" data-daytag></span></div>${sHtml}`;
+      grid.appendChild(card);
     });
     root.appendChild(sec);
   }
-  // wire checkboxes
-  root.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-    cb.addEventListener('change', onToggle);
-  });
+  root.querySelectorAll('input[type=checkbox]').forEach(cb=> cb.addEventListener('change', onToggle));
   refreshDayStates();
-}
-
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function onToggle(e){
-  const key = e.target.dataset.key;
+  const label = e.target.closest('.sess');
+  const key = label.dataset.key;
   if(e.target.checked) done.add(key); else done.delete(key);
   saveDone(done);
-  // update the session row visual
-  const sess = e.target.closest('.sess');
-  if(sess) sess.classList.toggle('done', e.target.checked);
-  refreshDayStates();
-  renderSummary();
-  renderChart();
+  label.classList.toggle('done', e.target.checked);
+  refreshDayStates(); renderSummary(); renderChart();
 }
-
 function refreshDayStates(){
   document.querySelectorAll('.day').forEach(card=>{
-    const date = card.dataset.date;
-    const day = days.find(d=>d.date===date);
+    const day = days.find(d=>d.date===card.dataset.date);
     const total = day.sessions.length;
-    let c = 0; day.sessions.forEach((s,i)=>{ if(isDone(date,i)) c++; });
-    const tag = card.querySelector('[data-daytag]');
+    let c=0; day.sessions.forEach((s,i)=>{ if(isDone(day.date,i)) c++; });
     const full = c===total && total>0;
     card.classList.toggle('done', full);
+    const tag = card.querySelector('[data-daytag]');
     tag.textContent = full ? '✓ concluído' : `${c}/${total} sessões`;
     tag.classList.toggle('full', full);
   });
 }
+function syncAll(){
+  document.querySelectorAll('.sess').forEach(el=>{
+    const on = done.has(el.dataset.key);
+    el.classList.toggle('done', on);
+    const cb = el.querySelector('input'); if(cb) cb.checked = on;
+  });
+  refreshDayStates(); renderSummary(); renderChart();
+}
+
+/* ---------- snackbar with undo ---------- */
+let snackTimer=null;
+function showSnackbar(msg, actionLabel, cb){
+  const bar=document.getElementById('snackbar'), act=document.getElementById('snackAction');
+  document.getElementById('snackMsg').textContent = msg;
+  bar.hidden=false; requestAnimationFrame(()=>bar.classList.add('show'));
+  if(actionLabel){ act.hidden=false; act.textContent=actionLabel; act.onclick=()=>{ hideSnackbar(); cb&&cb(); }; }
+  else act.hidden=true;
+  clearTimeout(snackTimer); snackTimer=setTimeout(hideSnackbar, 6000);
+}
+function hideSnackbar(){
+  const bar=document.getElementById('snackbar');
+  bar.classList.remove('show'); clearTimeout(snackTimer);
+  setTimeout(()=>{ bar.hidden=true; }, 300);
+}
 
 document.getElementById('resetBtn').addEventListener('click', ()=>{
-  if(!confirm('Limpar todo o progresso registrado? Esta ação não pode ser desfeita.')) return;
-  done = new Set();
-  saveDone(done);
-  document.querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=false;});
-  document.querySelectorAll('.sess.done').forEach(s=>s.classList.remove('done'));
-  refreshDayStates();
-  renderSummary();
-  renderChart();
+  if(done.size===0){ showSnackbar('Nenhum progresso para limpar.'); return; }
+  const snapshot = new Set(done);
+  done = new Set(); saveDone(done); syncAll();
+  showSnackbar('Progresso limpo.', 'Desfazer', ()=>{ done = snapshot; saveDone(done); syncAll(); });
 });
 
-// ---- init ----
-const sd = days[0].date.split('-'), ed = days[days.length-1].date.split('-');
-document.getElementById('period').textContent =
-  `${sd[2]}/${sd[1]}/${sd[0]} → ${ed[2]}/${ed[1]}/${ed[0]}  ·  ${days.length} dias  ·  ${TOTAL_SESS} sessões  ·  ${Math.round(TOTAL_MIN/60)} h`;
+/* ---------- go to today ---------- */
+const todayBtn = document.getElementById('todayBtn');
+(function initToday(){
+  const ti = todayIndex();
+  if(ti<0){ todayBtn.disabled=true; todayBtn.setAttribute('aria-label','Hoje está fora do período do cronograma'); }
+})();
+todayBtn.addEventListener('click', ()=>{
+  const ti = todayIndex(); if(ti<0) return;
+  const iso = days[ti].date;
+  const card = document.querySelector(`.day[data-date="${iso}"]`);
+  if(card){
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    card.scrollIntoView({behavior: reduce?'auto':'smooth', block:'center'});
+    card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+  }
+});
+
+/* ---------- responsive chart re-render ---------- */
+let rt=null;
+window.addEventListener('resize', ()=>{ clearTimeout(rt); rt=setTimeout(renderChart, 150); });
+
+/* ---------- init ---------- */
+(function initHeader(){
+  const sd=days[0].date.split('-'), ed=days[days.length-1].date.split('-');
+  document.getElementById('period').textContent =
+    `${sd[2]}/${sd[1]}/${sd[0]} → ${ed[2]}/${ed[1]}/${ed[0]}  ·  ${days.length} dias  ·  ${TOTAL_SESS} sessões  ·  ${Math.round(TOTAL_MIN/60)} h`;
+})();
 renderPhases();
 renderSummary();
 renderChart();
+
+/* ---------- PWA: instalar como app (Android/Chrome) ---------- */
+let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn');
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault(); deferredPrompt = e;
+  if(!isStandalone()) installBtn.hidden = false;
+});
+installBtn.addEventListener('click', async ()=>{
+  if(!deferredPrompt) return;
+  installBtn.hidden = true;
+  deferredPrompt.prompt();
+  try{ await deferredPrompt.userChoice; }catch(e){}
+  deferredPrompt = null;
+});
+window.addEventListener('appinstalled', ()=>{
+  installBtn.hidden = true; deferredPrompt = null;
+  showSnackbar('App instalado com sucesso!');
+});
+
+/* ---------- PWA: service worker (offline) ---------- */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 </script>
 </body>
 </html>
