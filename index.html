@@ -26,6 +26,7 @@
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
+      color-scheme: dark;
       --bg:#0f1729; --surface:#182640; --surface2:#1e2f4d; --surface3:#24375a;
       --txt:#e8eef8; --mut:#9fb0cc; --mut2:#7f92b4; --line:#2a3d61;
       --primary:#38bdf8; --primary2:#22d3ee; --onprimary:#08131f;
@@ -34,13 +35,21 @@
       --chip-ink:#0b1220;
     }
   }
+  /* Força o color-scheme conforme o tema escolhido manualmente — garante que
+     controles nativos (checkbox) sigam o tema, e não a preferência do sistema. */
+  :root[data-theme="light"]{ color-scheme: light; }
   :root[data-theme="dark"]{
+    color-scheme: dark;
     --bg:#0f1729; --surface:#182640; --surface2:#1e2f4d; --surface3:#24375a;
     --txt:#e8eef8; --mut:#9fb0cc; --mut2:#7f92b4; --line:#2a3d61;
     --primary:#38bdf8; --primary2:#22d3ee; --onprimary:#08131f;
     --ok:#34d399; --okbg:#13291f; --okline:#1f6f47; --okstrike:#2f6a4a;
     --focus:#38bdf8; --shadow:0 6px 24px rgba(0,0,0,.35);
     --chip-ink:#0b1220;
+  }
+  /* Suprime transições durante a troca de tema (evita o "delay"/fade em massa). */
+  .theme-switching, .theme-switching *, .theme-switching *::before, .theme-switching *::after{
+    transition:none !important;
   }
 
   *{box-sizing:border-box}
@@ -143,14 +152,15 @@
   .daytag{font-size:.76rem; color:var(--mut); white-space:nowrap; flex:0 0 auto}
   .daytag.full{color:var(--ok); font-weight:800}
 
-  /* ---------- SESSION (whole row is the 48dp+ touch target / label) ---------- */
-  .sess{display:flex; gap:12px; align-items:flex-start; min-height:48px;
-    padding:10px; margin-top:8px; border-radius:12px; background:var(--surface2);
-    border:1px solid transparent; cursor:pointer; transition:background .15s, transform .05s, border-color .15s;
-    -webkit-user-select:none; user-select:none}
-  .sess:hover{background:var(--surface3)}
-  .sess:active{transform:scale(.995)}
+  /* ---------- SESSION ---------- */
+  .sess{display:grid; grid-template-columns:1fr auto; align-items:start; column-gap:6px;
+    padding:6px 8px 6px 10px; margin-top:8px; border-radius:12px; background:var(--surface2);
+    border:1px solid transparent; transition:background .15s, border-color .15s}
   .sess.done{background:var(--okbg); border-color:var(--okline)}
+  /* .sess-main é o alvo de toque (>=44px) que marca a sessão como concluída */
+  .sess-main{grid-column:1; display:flex; gap:12px; align-items:flex-start; min-height:44px;
+    padding:4px 0; cursor:pointer; -webkit-user-select:none; user-select:none; transition:transform .05s}
+  .sess-main:active{transform:scale(.995)}
   .chkwrap{flex:0 0 auto; width:32px; height:32px; display:grid; place-items:center; margin-top:1px}
   .chkwrap input{width:24px; height:24px; margin:0; cursor:pointer; accent-color:var(--ok)}
   .sbody{flex:1 1 auto; min-width:0}
@@ -163,6 +173,25 @@
   ul.temas{margin:2px 0 0; padding-left:20px}
   ul.temas li{font-size:.85rem; color:var(--txt); margin:1px 0; overflow-wrap:anywhere}
   .sess.done ul.temas li{color:var(--mut); text-decoration:line-through; text-decoration-color:var(--okstrike)}
+
+  /* ---------- NOTES (caixa de texto retrátil por sessão) ---------- */
+  .notes-toggle{grid-column:2; align-self:center; position:relative; width:40px; height:40px;
+    display:grid; place-items:center; border:none; background:transparent; color:var(--mut2);
+    cursor:pointer; border-radius:10px; transition:background .15s, color .15s}
+  .notes-toggle:hover{background:var(--surface3); color:var(--txt)}
+  .notes-toggle:active{transform:scale(.94)}
+  .notes-toggle svg{width:18px; height:18px; transition:transform .2s ease}
+  .notes-toggle[aria-expanded="true"] svg{transform:rotate(90deg)}
+  .notes-toggle.has-notes{color:var(--primary)}
+  .notes-toggle.has-notes::after{content:""; position:absolute; top:7px; right:7px; width:6px; height:6px;
+    border-radius:50%; background:var(--primary)}
+  .notes-wrap{grid-column:1 / -1; padding:2px 2px 6px}
+  .notes-wrap[hidden]{display:none}
+  .notes{width:100%; box-sizing:border-box; resize:vertical; min-height:60px; max-height:400px;
+    font:inherit; font-size:.9rem; line-height:1.45; color:var(--txt);
+    background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:8px 10px}
+  .notes::placeholder{color:var(--mut2)}
+  .notes:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
 
   /* ---------- SNACKBAR (Material) ---------- */
   .snackbar{position:fixed; left:50%; transform:translateX(-50%) translateY(140%);
@@ -252,6 +281,7 @@
 const PLANO = JSON.parse(document.getElementById('plano').textContent);
 const STORE_KEY = 'crono-tjpe-v1';
 const THEME_KEY = 'crono-tjpe-theme';
+const NOTES_KEY = 'crono-tjpe-notes-v1';
 
 const DISC_COLORS = {
   "Administrativo":"#60a5fa","Ambiental":"#34d399","Civil":"#f472b6",
@@ -272,6 +302,13 @@ function loadDone(){
 function saveDone(set){ try{ localStorage.setItem(STORE_KEY, JSON.stringify([...set])); }catch(e){} }
 let done = loadDone();
 
+/* ---------- notes store ---------- */
+function loadNotes(){
+  try{ return JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveNotes(obj){ try{ localStorage.setItem(NOTES_KEY, JSON.stringify(obj)); }catch(e){} }
+const NOTES = loadNotes();
+
 /* ---------- theme ---------- */
 function effectiveTheme(){
   const forced = document.documentElement.getAttribute('data-theme');
@@ -280,6 +317,8 @@ function effectiveTheme(){
 }
 function applyTheme(t){
   const root = document.documentElement;
+  // Suprime transições durante a troca para evitar o "delay"/fade em massa.
+  root.classList.add('theme-switching');
   if(t==='light'||t==='dark') root.setAttribute('data-theme', t);
   else root.removeAttribute('data-theme');
   const eff = effectiveTheme();
@@ -287,6 +326,7 @@ function applyTheme(t){
   document.getElementById('themeIcon').textContent = eff==='dark' ? '☀️' : '🌙';
   btn.setAttribute('aria-pressed', eff==='dark' ? 'true':'false');
   btn.setAttribute('aria-label', eff==='dark' ? 'Ativar tema claro' : 'Ativar tema escuro');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>root.classList.remove('theme-switching')));
 }
 applyTheme(localStorage.getItem(THEME_KEY));
 document.getElementById('themeBtn').addEventListener('click', ()=>{
@@ -420,16 +460,31 @@ function renderPhases(){
         const checked = isDone(day.date,i);
         const temas = s.temas.map(t=>`<li>${escapeHtml(t)}</li>`).join("");
         const alabel = escapeHtml(`${s.disciplina}, ${fmtMin(s.minutes)} — ${title}, sessão ${i+1}`);
-        sHtml += `<label class="sess${checked?' done':''}" data-key="${sessionKey(day.date,i)}">
-            <span class="chkwrap"><input type="checkbox" ${checked?'checked':''} aria-label="${alabel}"></span>
-            <span class="sbody">
-              <span class="srow">
-                <span class="disc" style="background:${discColor(s.disciplina)}">${escapeHtml(s.disciplina)}</span>
-                <span class="carga">${fmtMin(s.minutes)}</span>
+        const nkey = sessionKey(day.date,i);
+        const nid = 'n-'+day.date+'-'+i;
+        const noteRaw = NOTES[nkey] || '';
+        const hasNotes = noteRaw.trim() ? ' has-notes' : '';
+        sHtml += `<div class="sess${checked?' done':''}" data-key="${nkey}">
+            <label class="sess-main">
+              <span class="chkwrap"><input type="checkbox" ${checked?'checked':''} aria-label="${alabel}"></span>
+              <span class="sbody">
+                <span class="srow">
+                  <span class="disc" style="background:${discColor(s.disciplina)}">${escapeHtml(s.disciplina)}</span>
+                  <span class="carga">${fmtMin(s.minutes)}</span>
+                </span>
+                <ul class="temas">${temas}</ul>
               </span>
-              <ul class="temas">${temas}</ul>
-            </span>
-          </label>`;
+            </label>
+            <button type="button" class="notes-toggle${hasNotes}" aria-expanded="false" aria-controls="${nid}"
+              aria-label="Anotações da sessão" title="Anotações">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor"
+                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="notes-wrap" id="${nid}" hidden>
+              <textarea class="notes" data-key="${nkey}" rows="3" placeholder="Anotações desta sessão…"
+                aria-label="Anotações da sessão">${escapeHtml(noteRaw)}</textarea>
+            </div>
+          </div>`;
       });
       card.innerHTML = `<div class="dayhead"><span class="daytitle">${escapeHtml(title)}</span>`+
         `<span class="daytag" data-daytag></span></div>${sHtml}`;
@@ -438,6 +493,8 @@ function renderPhases(){
     root.appendChild(sec);
   }
   root.querySelectorAll('input[type=checkbox]').forEach(cb=> cb.addEventListener('change', onToggle));
+  root.querySelectorAll('.notes-toggle').forEach(b=> b.addEventListener('click', onNotesToggle));
+  root.querySelectorAll('textarea.notes').forEach(t=> t.addEventListener('input', onNotesInput));
   refreshDayStates();
 }
 
@@ -448,6 +505,30 @@ function onToggle(e){
   saveDone(done);
   label.classList.toggle('done', e.target.checked);
   refreshDayStates(); renderSummary(); renderChart();
+}
+
+/* ---------- notes (caixa retrátil por sessão) ---------- */
+function autoGrow(ta){ ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight, 400)+'px'; }
+function onNotesToggle(e){
+  const btn = e.currentTarget;
+  const wrap = document.getElementById(btn.getAttribute('aria-controls'));
+  const opening = wrap.hasAttribute('hidden');
+  if(opening){
+    wrap.removeAttribute('hidden');
+    btn.setAttribute('aria-expanded','true');
+    const ta = wrap.querySelector('textarea'); autoGrow(ta); ta.focus({preventScroll:true});
+  } else {
+    wrap.setAttribute('hidden','');
+    btn.setAttribute('aria-expanded','false');
+  }
+}
+function onNotesInput(e){
+  const ta = e.target, key = ta.dataset.key, v = ta.value;
+  if(v.trim()) NOTES[key] = v; else delete NOTES[key];
+  saveNotes(NOTES);
+  autoGrow(ta);
+  const btn = ta.closest('.sess').querySelector('.notes-toggle');
+  btn.classList.toggle('has-notes', !!v.trim());
 }
 function refreshDayStates(){
   document.querySelectorAll('.day').forEach(card=>{
